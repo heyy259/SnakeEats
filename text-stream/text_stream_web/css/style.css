@@ -1,0 +1,713 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --light-bg: #ecf0f1;
+    --dark-text: #2c3e50;
+    --border-color: #bdc3c7;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: var(--dark-text);
+    background-color: var(--light-bg);
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* 顶部栏 */
+#header {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.system-status {
+    display: flex;
+    gap: 15px;
+}
+
+.system-status span {
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.system-controls button {
+    padding: 8px 16px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#btn-connect {
+    background-color: var(--success-color);
+    color: white;
+}
+
+#btn-disconnect {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 主内容区 */
+#main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 左侧面板 */
+#sidebar {
+    width: 300px;
+    background-color: white;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+#stream-list-section {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#stream-list-section h3 {
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+}
+
+#stream-search {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+#stream-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.stream-item {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.stream-item:hover {
+    background-color: var(--light-bg);
+}
+
+.stream-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.stream-item-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.stream-item-preview {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stream-item-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+#btn-create-stream {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* 订阅面板 */
+#subscriptions-section {
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#subscriptions-section h3 {
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+}
+
+/* 右侧主面板 */
+#content-panel {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* 流详情 */
+.stream-header {
+    margin-bottom: 20px;
+}
+
+.stream-header h2 {
+    color: var(--secondary-color);
+    margin-bottom: 5px;
+}
+
+.stream-meta {
+    display: flex;
+    gap: 10px;
+    color: #666;
+    font-size: 14px;
+}
+
+#stream-tags {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* 标签页 */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.tab {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 2px solid transparent;
+}
+
+.tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 编辑器工具栏 */
+.editor-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.editor-toolbar button {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.editor-toolbar button:hover {
+    background-color: var(--light-bg);
+}
+
+/* 搜索栏 */
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.search-bar input[type="text"] {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.search-bar button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-bar label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+/* 编辑器 */
+#editor {
+    width: 100%;
+    height: 400px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* 搜索结果 */
+#search-results {
+    margin-top: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.search-result-item:hover {
+    background-color: var(--light-bg);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-preview {
+    font-family: monospace;
+    font-size: 13px;
+    background-color: #f8f9fa;
+    padding: 5px;
+    border-radius: 3px;
+    margin-top: 5px;
+}
+
+.search-result-info {
+    font-size: 12px;
+    color: #666;
+}
+
+/* 元数据表单 */
+.metadata-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.metadata-form label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.metadata-form input[type="text"] {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.metadata-form button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.tags-section {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.tags-section h4 {
+    margin-bottom: 10px;
+}
+
+#tags-list {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.tag-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: var(--light-bg);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.tag-item .remove-tag {
+    cursor: pointer;
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.tag-input {
+    display: flex;
+    gap: 10px;
+}
+
+.tag-input input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* 订阅控制 */
+.subscribe-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.subscribe-controls input[type="number"] {
+    width: 100px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.subscribe-controls button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#btn-subscribe {
+    background-color: var(--success-color);
+    color: white;
+}
+
+#btn-unsubscribe {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* 通知日志 */
+#notifications-log {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 15px;
+}
+
+#notifications-log h4 {
+    margin-bottom: 10px;
+}
+
+#notifications-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-type {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.notification-time {
+    color: #666;
+    font-size: 12px;
+}
+
+/* 空状态 */
+#empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #666;
+}
+
+/* 底部状态栏 */
+#footer {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 8px 20px;
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+}
+
+#footer span {
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* Toast动画 */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast-error,
+.toast-success {
+    animation: slideIn 0.3s ease;
+}
+
+.toast-error.removing,
+.toast-success.removing {
+    animation: slideOut 0.3s ease;
+}
+
+/* 删除按钮 */
+#btn-delete-stream {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#btn-delete-stream:hover {
+    background-color: #c0392b;
+}
+
+/* 模态对话框 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--secondary-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--danger-color);
+}
+
+.modal-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-body textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 150px;
+}
+
+.modal-body textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-primary {
+    padding: 8px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-secondary {
+    padding: 8px 20px;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary:hover {
+    background-color: #dfe6e9;
+}
+
+/* 响应式布局 */
+
+/* 平板端 */
+@media (max-width: 1023px) {
+    #sidebar {
+        width: 250px;
+    }
+}
+
+/* 移动端 */
+@media (max-width: 767px) {
+    #main {
+        flex-direction: column;
+    }
+
+    #sidebar {
+        width: 100%;
+        max-height: 300px;
+    }
+
+    #content-panel {
+        padding: 10px;
+    }
+
+    #editor {
+        height: 200px;
+    }
+
+    .editor-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .search-bar {
+        flex-direction: column;
+    }
+
+    .search-bar input[type="text"] {
+        width: 100%;
+    }
+}

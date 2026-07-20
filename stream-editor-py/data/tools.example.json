@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-01-01T00:00:00",
+  "tools": {
+    "weather": {
+      "name": "weather",
+      "description": "查询天气\n输入: {city: str, unit?: str} → 输出: {temperature: float, condition: str}",
+      "tool_path": "/path/to/weather_tool.py",
+      "execution_path": "/path/to",
+      "brief_description": "查询天气",
+      "detailed_description": "",
+      "manual_path": null,
+      "tags": {
+        "category": "demo",
+        "language": "python"
+      },
+      "version": "1.0.0",
+      "created_at": "2026-01-01T00:00:00",
+      "updated_at": "2026-01-01T00:00:00"
+    }
+  }
+}

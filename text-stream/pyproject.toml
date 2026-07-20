@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "text-stream"
+version = "0.1.0"
+description = "文本流系统：多实例文本流内核、WebSocket 服务器与 SDK"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = [
+    "websockets>=12.0",
+    "chardet>=5.0",
+]
+authors = [
+    { name = "heyy259", email = "67221771+heyy259@users.noreply.github.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/heyy259/SnakeEats"
+Repository = "https://github.com/heyy259/SnakeEats"
+Issues = "https://github.com/heyy259/SnakeEats/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["text_stream_sdk", "text_stream_system", "text_stream_web"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.pytest.ini_options.markers]
+asyncio = "pytest-asyncio marker"

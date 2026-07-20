@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Editor - SnakeEats</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div id="app" class="main-layout">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button id="sidebar-toggle" class="sidebar-toggle" title="Toggle sidebar">◀</button>
+                <h1 class="app-title">Stream Editor</h1>
+            </div>
+            <div class="header-center">
+                <span id="active-stream-name" class="active-stream-name"></span>
+                <span id="modified-indicator" class="modified-indicator" style="display: none;"> •</span>
+            </div>
+            <div class="header-right">
+                <div class="file-actions">
+                    <button class="btn btn-sm btn-primary" id="btn-save" title="Save current stream" disabled>
+                        💾 Save
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="btn-save-as" title="Save stream to file" disabled>
+                        📁 Save As...
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="btn-load" title="Load stream from file">
+                        📂 Load...
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="btn-import-file" title="Import document as new stream">
+                        📄 Import File
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar">
+                <!-- System Status -->
+                <div class="system-manager">
+                    <div class="system-manager-header">
+                        <button class="toggle-btn" id="toggle-systems">
+                            ▼ System
+                        </button>
+                        <div class="system-manager-actions">
+                            <button class="btn btn-sm btn-secondary" id="btn-restart-system" title="Restart system (new empty instance)">
+                                🔄 Restart
+                            </button>
+                        </div>
+                    </div>
+                    <div id="system-list" class="system-list">
+                        <!-- System status rendered here -->
+                    </div>
+                </div>
+
+                <!-- Stream List -->
+                <div class="tab-manager">
+                    <div class="tab-manager-header">
+                        <h3>Streams</h3>
+                        <button class="btn btn-sm btn-primary" id="btn-create-stream" title="Create new stream">
+                            + New Stream
+                        </button>
+                    </div>
+                    <div id="stream-list" class="stream-list">
+                        <!-- Streams will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Tool Panel -->
+                <div class="tool-panel">
+                    <div class="tool-panel-header">
+                        <button class="toggle-btn" id="toggle-tools">
+                            ▼ Tools
+                        </button>
+                        <span id="tool-count" class="tool-count">0 / 0</span>
+                        <button class="btn btn-sm btn-primary" id="btn-register-tool" title="Register new tool">
+                            + Register
+                        </button>
+                    </div>
+                    <div id="tool-search" class="tool-search">
+                        <div class="search-input-container">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="tool-search-input" class="search-input" placeholder="Search tools...">
+                            <button class="search-clear" id="clear-tool-search" style="display: none;">×</button>
+                        </div>
+                    </div>
+                    <div id="tag-key-pills" class="tag-key-pills"></div>
+                    <div id="active-filters" class="active-filters"></div>
+                    <div id="tool-list" class="tool-list">
+                        <!-- Tools will be rendered here -->
+                    </div>
+                    <div id="tag-value-dropdown" class="tag-value-dropdown" style="display:none;"></div>
+                </div>
+            </aside>
+
+            <!-- Editor Area -->
+            <main class="editor-area">
+                <!-- Tab Bar -->
+                <div id="tab-bar" class="tab-bar">
+                    <div class="tab-list" id="tab-list">
+                        <!-- Tabs will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Editor Container -->
+                <div id="editor-container" class="editor-container">
+                    <!-- Welcome placeholder -->
+                    <div id="editor-placeholder" class="editor-placeholder">
+                        <div class="placeholder-content">
+                            <h2>Welcome to Stream Editor</h2>
+                            <p>Select a system and open a stream to start editing.</p>
+                            <div class="placeholder-steps">
+                                <div class="step">
+                                    <span class="step-number">1</span>
+                                    <span class="step-text">Create or select a system from the sidebar</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">2</span>
+                                    <span class="step-text">Open a stream from the stream list</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">3</span>
+                                    <span class="step-text">Start editing with Markdown support</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Editor will be rendered here when a stream is opened -->
+                    <div id="editor" class="markdown-editor" style="display: none;"></div>
+                </div>
+
+                <!-- Scan Control -->
+                <div id="scan-control" class="scan-control">
+                    <div class="scan-control-header">
+                        <h3>Scan Control</h3>
+                        <div class="scan-status-indicator">
+                            <span id="scan-status-dot" class="status-dot idle"></span>
+                            <span id="scan-status-text" class="status-text">IDLE</span>
+                        </div>
+                    </div>
+                    <div class="scan-buttons">
+                        <button class="btn btn-primary" id="btn-scan-start" disabled>
+                            ▶ Start
+                        </button>
+                        <button class="btn btn-secondary" id="btn-scan-pause" disabled>
+                            ⏸ Pause
+                        </button>
+                        <button class="btn btn-primary" id="btn-scan-resume" disabled>
+                            ▶ Resume
+                        </button>
+                        <button class="btn btn-danger" id="btn-scan-stop" disabled>
+                            ⏹ Stop
+                        </button>
+                    </div>
+                    <div id="scan-position-info" class="scan-position-info" style="display: none;">
+                        <div class="position-stream">
+                            <span class="position-label">扫描目标:</span>
+                            <span id="scan-target-stream" class="position-value">-</span>
+                        </div>
+                        <div class="position-rowcol">
+                            <span class="position-label">扫描位置:</span>
+                            <span id="scan-pos-rowcol" class="position-value">Ln 1, Col 1</span>
+                        </div>
+                        <div class="position-context">
+                            <span class="context-label">附近:</span>
+                            <span id="scan-pos-before" class="context-before"></span>
+                            <span class="context-cursor">▼</span>
+                            <span id="scan-pos-after" class="context-after"></span>
+                        </div>
+                    </div>
+                    <div class="scan-position-setter">
+                        <label for="scan-position">Set Position:</label>
+                        <div class="position-setter-form">
+                            <input type="number" id="scan-position" class="position-field" value="0" min="0" disabled>
+                            <button class="btn btn-sm btn-secondary" id="btn-set-position" disabled>Set</button>
+                        </div>
+                        <div class="position-preview" id="position-preview">
+                            <span class="preview-rowcol" id="preview-rowcol">Ln 1, Col 1</span>
+                            <span class="preview-context">
+                                <span id="preview-before"></span>
+                                <span class="preview-cursor">▼</span>
+                                <span id="preview-after"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tool Interaction Bar — 始终可见 -->
+                <div id="tool-interaction-bar" class="tool-interaction-bar">
+                    <div class="target-list" id="target-list">
+                        <span class="target-placeholder">无可交互的后台进程</span>
+                    </div>
+                    <div class="output-log" id="output-log" style="display:none;"></div>
+                    <div class="interaction-input-row">
+                        <span id="selected-target-label" class="selected-target-label">选择进程后输入...</span>
+                        <textarea id="interaction-input" class="interaction-input"
+                                  placeholder="选择目标后输入，Enter 发送，Shift/Ctrl+Enter 换行"
+                                  disabled rows="3"></textarea>
+                        <button id="send-interaction-btn" class="btn btn-sm btn-primary" disabled>发送</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="connection-status" class="status-item">
+                    <span class="status-icon">●</span>
+                    <span class="status-label">Connected</span>
+                </span>
+                <span id="loading-status" class="status-item loading" style="display: none;">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-label">Loading...</span>
+                </span>
+            </div>
+            <div class="status-center">
+                <span id="system-info" class="status-item">
+                    <span class="status-label">No system selected</span>
+                </span>
+            </div>
+            <div class="status-right">
+                <span id="cursor-position" class="status-item">
+                    <span class="status-label">Ln 1, Col 1</span>
+                </span>
+                <span id="stream-version" class="status-item">
+                    <span class="status-label"></span>
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Create Stream Dialog -->
+    <div id="create-stream-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h2>Create New Stream</h2>
+                <button class="dialog-close" id="close-create-stream">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="stream-name">Stream Name</label>
+                    <input type="text" id="stream-name" placeholder="my-stream" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="stream-description">Description (optional)</label>
+                    <input type="text" id="stream-description" placeholder="Stream description">
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="cancel-create-stream">Cancel</button>
+                <button class="btn btn-primary" id="confirm-create-stream">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Detail Dialog (Edit Mode) -->
+    <div id="tool-detail-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog tool-detail-dialog">
+            <div class="dialog-header">
+                <h2>Edit Tool</h2>
+                <button class="dialog-close" id="close-tool-detail">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="tool-params-form">
+                    <div class="param-field">
+                        <label for="edit-name">Tool Name <span class="required">*</span></label>
+                        <input type="text" id="edit-name" placeholder="tool_name" required>
+                        <span class="help-text">Unique identifier (alphanumeric + underscores)</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-description">Description <span class="required">*</span></label>
+                        <textarea id="edit-description" rows="3" placeholder="Tool description&#10;Input: {param: type} → Output: {result: type}" required></textarea>
+                        <span class="help-text">Must include input→output structure</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-tool-path">Tool Path <span class="required">*</span></label>
+                        <div class="path-input-group">
+                            <input type="text" id="edit-tool-path" placeholder="/path/to/tool.py" required>
+                            <button class="btn btn-sm btn-secondary browse-btn" data-field="edit-tool-path">Browse</button>
+                        </div>
+                        <span class="help-text">Absolute path to the tool script</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-execution-path">Execution Path</label>
+                        <div class="path-input-group">
+                            <input type="text" id="edit-execution-path" placeholder="/path/to/working/dir">
+                            <button class="btn btn-sm btn-secondary browse-btn" data-field="edit-execution-path">Browse</button>
+                        </div>
+                        <span class="help-text">Working directory for execution (default: parent of tool path)</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-brief-description">Brief Description</label>
+                        <input type="text" id="edit-brief-description" placeholder="Short description for tool list">
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-detailed-description">Detailed Description</label>
+                        <textarea id="edit-detailed-description" rows="3" placeholder="Scenario 1: Basic usage&#10;Input: {param: value} → Output: {result: value}"></textarea>
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-manual-path">Manual Path</label>
+                        <div class="path-input-group">
+                            <input type="text" id="edit-manual-path" placeholder="/path/to/manual.md">
+                            <button class="btn btn-sm btn-secondary browse-btn" data-field="edit-manual-path">Browse</button>
+                        </div>
+                    </div>
+                    <div class="param-field">
+                        <label>Tags</label>
+                        <div id="edit-tags-editor" class="tags-editor">
+                            <div id="edit-tags-rows" class="tags-rows">
+                                <!-- Dynamic rows will be added here -->
+                            </div>
+                            <button type="button" id="edit-add-tag-row" class="btn btn-sm btn-secondary">
+                                + Add Tag
+                            </button>
+                        </div>
+                        <span class="help-text">Add key-value pairs to categorize this tool</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="edit-version">Version</label>
+                        <input type="text" id="edit-version" value="1.0.0">
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="cancel-tool-detail">Cancel</button>
+                <button class="btn btn-primary" id="save-tool-detail">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Register Dialog -->
+    <div id="tool-register-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog tool-register-dialog">
+            <div class="dialog-header">
+                <h2>Register New Tool</h2>
+                <button class="dialog-close" id="close-tool-register">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="tool-params-form">
+                    <div class="param-field">
+                        <label for="reg-name">Tool Name <span class="required">*</span></label>
+                        <input type="text" id="reg-name" placeholder="weather" autofocus required>
+                        <span class="help-text">Unique identifier (alphanumeric + underscores)</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-description">Description <span class="required">*</span></label>
+                        <textarea id="reg-description" rows="3" placeholder="Query weather data&#10;Input: {city: str, unit?: str} → Output: {temperature: float, condition: str}" required></textarea>
+                        <span class="help-text">Must include input→output structure</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-tool-path">Tool Path <span class="required">*</span></label>
+                        <div class="path-input-group">
+                            <input type="text" id="reg-tool-path" placeholder="/path/to/weather.py" required>
+                            <button class="btn btn-sm btn-secondary browse-btn" data-field="tool-path">Browse</button>
+                        </div>
+                        <span class="help-text">Absolute path to the tool script</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-execution-path">Execution Path</label>
+                        <div class="path-input-group">
+                            <input type="text" id="reg-execution-path" placeholder="/path/to/working/dir">
+                            <button class="btn btn-sm btn-secondary browse-btn" data-field="execution-path">Browse</button>
+                        </div>
+                        <span class="help-text">Working directory for execution (default: parent of tool path)</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-brief-description">Brief Description</label>
+                        <input type="text" id="reg-brief-description" placeholder="Query weather information">
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-detailed-description">Detailed Description</label>
+                        <textarea id="reg-detailed-description" rows="3" placeholder="Scenario 1: Basic query&#10;Input: {city: \"Beijing\"} → Output: {temperature: 25}"></textarea>
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-manual-path">Manual Path</label>
+                        <div class="path-input-group">
+                            <input type="text" id="reg-manual-path" placeholder="/path/to/manual.md">
+                            <button class="btn btn-sm btn-secondary browse-btn" data-field="manual-path">Browse</button>
+                        </div>
+                    </div>
+                    <div class="param-field">
+                        <label>Tags</label>
+                        <div id="tags-editor" class="tags-editor">
+                            <div id="tags-rows" class="tags-rows">
+                                <!-- Dynamic rows will be added here -->
+                            </div>
+                            <button type="button" id="add-tag-row" class="btn btn-sm btn-secondary">
+                                + Add Tag
+                            </button>
+                        </div>
+                        <span class="help-text">Add key-value pairs to categorize this tool</span>
+                    </div>
+                    <div class="param-field">
+                        <label for="reg-version">Version</label>
+                        <input type="text" id="reg-version" value="1.0.0">
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="cancel-tool-register" type="button">Cancel</button>
+                <button class="btn btn-primary" id="submit-tool-register" type="button">Register</button>
+            </div>
+
+            <!-- Tag row template -->
+            <template id="tag-row-template">
+                <div class="tag-row">
+                    <input type="text" class="tag-key-input" placeholder="Key (e.g., category)" list="tag-keys-list">
+                    <input type="text" class="tag-value-input" placeholder="Value (e.g., weather)" list="tag-values-list">
+                    <button type="button" class="btn-icon btn-remove-tag" title="Remove tag">✕</button>
+                </div>
+            </template>
+
+            <datalist id="tag-keys-list">
+                <!-- Will be populated dynamically -->
+            </datalist>
+
+            <datalist id="tag-values-list">
+                <!-- Will be populated dynamically -->
+            </datalist>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="error-toast" class="error-toast" style="display: none;">
+        <div class="toast-content">
+            <span class="toast-icon">⚠️</span>
+            <span id="error-message" class="toast-message"></span>
+            <button class="toast-close" id="close-error-toast">×</button>
+        </div>
+    </div>
+
+    <!-- File History Dialog -->
+    <div id="file-history-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h2 id="history-title">Recent Files</h2>
+                <button class="dialog-close" id="close-history-dialog">×</button>
+            </div>
+            <div class="dialog-content">
+                <div id="history-list" class="history-list">
+                    <!-- History items will be rendered here -->
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="cancel-history-dialog">Cancel</button>
+                <button class="btn btn-primary" id="browse-from-history">Browse...</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Streams Multi-Select Dialog -->
+    <dialog id="save-streams-dialog" class="dialog-overlay">
+        <div class="dialog" style="min-width: 420px;">
+            <div class="dialog-header">
+                <h3>Save Streams to File</h3>
+                <button class="btn-icon" id="close-save-streams-dialog">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <div class="save-streams-toolbar">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="save-streams-select-all" checked> Select All
+                    </label>
+                    <span id="save-streams-count" class="save-streams-hint">0 selected</span>
+                </div>
+                <div id="save-streams-list" class="save-streams-list">
+                    <!-- Dynamically populated -->
+                </div>
+                <div class="save-streams-dir">
+                    <label>Save to:</label>
+                    <input type="text" id="save-streams-dir-input" placeholder="Select output directory..." readonly>
+                    <button class="btn btn-sm btn-secondary" id="btn-browse-save-dir">Browse...</button>
+                </div>
+                <div class="save-streams-overwrite">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="save-streams-overwrite"> Overwrite existing files
+                    </label>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="btn-cancel-save-streams">Cancel</button>
+                <button class="btn btn-primary" id="btn-confirm-save-streams" disabled>💾 Save Selected</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Restart confirmation dialog -->
+    <div id="restart-dialog" class="modal-overlay" style="display:none">
+        <div class="modal-dialog">
+            <h3>⚠️ Restart System</h3>
+            <div class="modal-body">
+                <p>Restart will stop the current text-stream instance and create a new empty one.</p>
+                <p id="restart-dialog-stream-count" class="modal-warning"></p>
+                <div class="modal-options">
+                    <label class="modal-option selected" data-action="save">
+                        <input type="radio" name="restart-action" value="save" checked>
+                        <div class="option-content">
+                            <strong>💾 Save &amp; Restart</strong>
+                            <small>Auto-save all current streams, then restore them after restart</small>
+                        </div>
+                    </label>
+                    <label class="modal-option" data-action="discard">
+                        <input type="radio" name="restart-action" value="discard">
+                        <div class="option-content">
+                            <strong>🗑️ Discard &amp; Restart</strong>
+                            <small>Create a completely fresh system — all current streams will be lost</small>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-restart-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="btn-restart-confirm" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // WebSocket 端口配置
+        window.WEBSOCKET_PORT = {{ websocket_port | default(6000) }};
+    </script>
+    <script src="/static/js/api-client.js"></script>
+    <script src="/static/js/utils/scan-utils.js"></script>
+    <script src="/static/js/state.js"></script>
+    <script src="/static/js/stream-subscription-manager.js"></script>
+    <script src="/static/js/utils/toast.js"></script>
+    <script src="/static/js/components/system-manager.js"></script>
+    <script src="/static/js/components/tab-manager.js"></script>
+    <script src="/static/js/components/scan-control.js"></script>
+    <script src="/static/js/components/tool-panel.js"></script>
+    <script src="/static/js/components/tool-interaction.js"></script>
+    <script src="/static/js/components/file-manager.js"></script>
+    <script src="/static/js/editor/markdown-editor.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
