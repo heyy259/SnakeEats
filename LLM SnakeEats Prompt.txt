@@ -1,0 +1,239 @@
+SnakeEats 工具编写指南（LLM 用）
+核心概念
+你在为一个 文本流 + 工具注册系统 编写工具脚本。工具是独立的可执行文件，被扫描器在文本流中发现并调用，执行结果替换回文本流中。
+调用链路:
+LLM 生成 @{tool_name|{...params...}} 嵌入文本流
+  → Scanner 扫描到标记
+  → Executor 以 subprocess.Popen 调用工具脚本
+  → 工具从 stdin 读 JSON，执行逻辑，stdout 输出 JSON
+  → Scanner 捕获 stdout，用结果替换标记
+---
+I/O 契约
+输入: 从 sys.stdin 读取一行 JSON。
+params = json.loads(sys.stdin.read())
+输出: 向 sys.stdout 打印一行 JSON（必须是最后一行）。
+print(json.dumps(result, ensure_ascii=False))
+错误: 非零退出码 = 失败。stderr 会记录到控制台。错误信息应输出为 JSON。
+---
+三种执行模式
+1. 普通模式（同步，最常用）
+特征	说明
+标记格式	@{tool_name|{"arg1": "val1"}}
+执行方式	stdin → 等待 → stdout JSON → 标记被删除 + 结果替换
+适用场景	查询、计算、一次性操作
+# 完整示例
+import json, sys
+def main():
+    params = json.loads(sys.stdin.read())
+    result = {"success": True, "data": process(params)}
+    print(json.dumps(result, ensure_ascii=False))
+if __name__ == "__main__":
+    main()
+2. 后台模式（异步 + 可选交互）
+特征	说明
+标记格式	@{tool_name|{"$mode":"background", "$process_name":"my_proc", "arg":"val"}}
+执行方式	非阻塞启动，进程持续运行
+stdin	$keep_stdin: "true" → stdin 保持开放，可后续 send_input()
+输出	实时流式输出到 $console_stream 指定的流
+系统字段（$ 前缀，执行时自动剥离不传给你）:
+字段	类型	说明
+$mode	string	"background" 启用后台模式
+$console_stream	string	实时输出写入的流名
+$keep_stdin	string	"true" 保持 stdin 开放接收后续输入
+$timeout	number	超时秒数，0=无限制
+$process_name	string	自定义进程名，不设则自动生成 toolname_N
+$keep_sys_fields	bool	true 时 $ 字段也传入工具参数
+---
+与文本流交互（可选但推荐）
+工具可通过 text_stream_sdk 直接读写文本流。以下环境变量由 Executor 自动传入子进程（无需工具自己设置）：
+  TEXT_STREAM_SYSTEM_ID — 文本流系统标识
+  TEXT_STREAM_PORT — 文本流服务端口
+  TOOL_REGISTRY_PORT — 工具注册服务端口
+  SCAN_STREAM_NAME — 被扫描的流名称（扫描时自动注入，工具可直接用来获取流对象）
+import os, json, sys
+from text_stream_sdk import System
+def main():
+    params = json.loads(sys.stdin.read())
+    # 获取被扫描的流名称（扫描时自动注入，无需通过参数传递）
+    target_stream = os.environ.get("SCAN_STREAM_NAME", "")
+    # ...执行业务逻辑...
+    result = {"success": True, "data": ...}
+    print(json.dumps(result, ensure_ascii=False))  # stdout 给 scanner
+    # 额外写入其他流（日志、通知等）
+    try:
+        system = System()
+        if target_stream:
+            stream = system.get(target_stream)  # 直接获取被扫描的流
+        console = system.get("console")
+        console.append(f"[tool] done\n")
+    except Exception:
+        pass  # SDK 不可用时静默降级
+关键 API:
+方法	说明
+system.get(name)	获取已有流
+system.create(name, desc)	创建新流
+stream.read(start?, end?)	读取流内容（不传参数=读取全部）
+stream.read_range(start, end)	读取 [start, end) 范围
+stream.read_lines(start_line?, end_line?)	按行号读取
+stream.get_length()	获取流内容长度（字符数）
+stream.write(text)	覆盖整个流内容
+stream.append(text)	追加到流末尾
+stream.prepend(text)	追加到流开头
+stream.insert(pos, text)	在指定位置插入
+stream.delete_range(start, end)	删除指定范围
+stream.replace_range(start, end, text)	替换指定范围为 text
+stream.replace_lines(start_line, end_line, text)	替换指定行号范围
+stream.search(pattern, context_before=100, context_after=100, regex=False)	在流中搜索并返回上下文
+stream.search_in_range(pattern, start, end, regex=False)	在指定范围搜索
+stream.get_metadata()	获取流元数据
+stream.update_description(text)	更新流描述
+stream.set_tag(key, value)	设置标签
+stream.remove_tag(key)	删除标签
+stream.rename(new_name)	重命名流
+
+---
+扫描位置感知操作（★★★★★ 重点）
+当 Scanner 在流中发现 @{tool_name|...{...}...} 标记时：
+  1. 自动注入环境变量 SCAN_STREAM_NAME = 被扫描的流名称
+  2. 自动将标记在流中的位置区间存入 InternalStore：
+     Key:  _config_{stream_name}
+     Value: {"start": marker起始位置, "end": marker结束位置}
+
+工具通过 SCAN_STREAM_NAME 获取流对象即可使用位置感知 API，无需在参数中手动传递流名。
+  stream_name = os.environ.get("SCAN_STREAM_NAME")
+  stream = system.get(stream_name)
+
+【核心概念】
+  start = 标记 @{...} 的第一个字符在流中的位置（0-based, inclusive）
+  end   = 标记 @{...} 最后一个字符之后的位置（0-based, exclusive）
+         ┌──────────────────────────────────────────────────┐
+         │ 流内容:  ...前文...@{my_tool|{...}}...后文...     │
+         │ 索引:    0   ^  start  ^          ^  end     N    │
+         │ 区域:    │← get_text_before() →│← get_text_after()│
+         └──────────────────────────────────────────────────┘
+
+读取扫描位置相关的 API:
+方法	说明
+stream.get_replace_config()	返回 {"start": int, "end": int} — 标记在流中的位置
+stream.get_text_before()	读取标记之前的所有文本（text[0:start]）
+stream.get_text_after()	读取标记之后的所有文本（text[end:]）
+
+在扫描位置处编辑的 API:
+方法	说明
+stream.insert_after(text)	在标记原位置之后插入 text（在 end 处插入，标记保留）
+stream.replace_in_range(text)	用 text 替换标记本身（start 到 end 的范围）+ 自动修正 config
+stream.replace_before(text)	用 text 替换标记之前的所有内容（0 到 start）
+stream.replace_after(text)	用 text 替换标记之后的所有内容（end 到末尾）
+stream.set_replace_config(start, end)	手动设置替换范围（高级用法）
+
+【典型场景 1：读取标记周围的上下文】
+当工具需要理解自己被调用时的上下文（如 LLM 工具需要读取提示词上下文中已有的讨论）：
+  stream_name = os.environ.get("SCAN_STREAM_NAME")
+  stream = system.get(stream_name)
+  config = stream.get_replace_config()
+  context_before = stream.get_text_before()  # 标记之前的文本
+  context_after = stream.get_text_after()    # 标记之后的文本
+  # 或者只读周围的 N 个字符
+  nearby_before = stream.read(start=max(0, config["start"]-500), end=config["start"])
+
+【典型场景 2：原地替换标记本身为结果】
+普通模式的 stdout JSON 会被追加到流末尾。如果想原地替换（标记消失，结果出现在原位置）：
+  result_text = f"查询结果：{weather_data}"
+  stream.replace_in_range(result_text)  # 标记被替换为结果，位置自动更新
+
+【典型场景 3：在标记位置附近追加内容】
+  # 在标记之后紧跟插入（不删除标记）
+  stream.insert_after("\n[处理中] analyzing...")
+  # 在处理完成后替换标记
+  stream.replace_in_range("[已完成] " + result)
+
+【典型场景 4：工具生成子工具链（原地展开）】
+编排器收到复杂任务，分解后直接在原位插入子任务标记：
+  tasks = llm_decompose(goal)  # LLM 分解出 3 个子任务
+  for task in tasks:
+      stream.insert_after("\n@{" + task.tool + "|" + json.dumps(task.params) + "}")
+  # 最后替换掉自己的标记
+  stream.replace_in_range("[已分解为 " + str(len(tasks)) + " 个子任务]")
+
+【注意事项】
+- SCAN_STREAM_NAME 由 Scanner 在调用工具前自动注入，工具无需手动设置
+- InternalStore 配置由 Scanner 在调用工具前自动设置，工具无需手动 set
+- replace_in_range() 会自动修正 config（end = start + len(new_text)）
+- insert_after() 不修改配置（start/end 不变）
+- replace_before() 会偏移 start 和 end（delta = len(new_text) - old_start）
+- 如果 SDK 不可用（text_stream_sdk import 失败），所有方法静默降级，不影响工具基本功能
+- ⚠️ get_text_before() / get_text_after() 依赖 Scanner 设置的 _config_{流名}，
+  仅对 @{...} 标记所在的流有效。工具通过 stream 参数读取其他流时，
+  应使用 stream.read()（不传参数=读取全部），而非这两个方法
+
+---
+错误处理模式
+try:
+    params = json.loads(sys.stdin.read())
+except (json.JSONDecodeError, EOFError):
+    print(json.dumps({"error": "Invalid JSON input"}))
+    sys.exit(1)  # 非零退出码 = 失败
+# 验证参数
+if not params.get("required_key"):
+    print(json.dumps({"error": "Missing required parameter: required_key"}))
+    sys.exit(1)
+try:
+    result = do_work(params)
+    print(json.dumps({"success": True, "data": result}))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+    sys.exit(1)
+规则: exit(0) + 最后一行可解析 JSON = 成功。exit(≠0) = 失败。
+---
+工具注册格式
+# 注册工具定义
+sdk.register_tool(
+    name="my_tool",             # 唯一标识，仅允许 [a-zA-Z0-9_]
+    description="描述功能\n输入: {key: type} → 输出: {field: type}",
+    tool_path="/path/to/my_tool.py",  # 可以是 .py 文件或目录
+    execution_path="/path/to/workdir",  # 可选，cwd
+    tags={"category": "utility"},
+)
+description 必须包含 →，描述输入参数和输出结构，这是 LLM 理解工具的唯一起点。
+---
+工具路径解析
+- .py 文件 → 用 Python 执行
+- .js 文件 → 用 Node 执行
+- .sh 文件 → 用 Bash 执行
+- 目录 → 找 main.py / __main__.py / run.py
+---
+最简模板
+#!/usr/bin/env python3
+"""工具描述\n输入: {x: int, y: int} → 输出: {sum: int}"""
+import json, sys
+def main():
+    params = json.loads(sys.stdin.read())
+    x, y = params["x"], params["y"]
+    print(json.dumps({"sum": x + y}))
+if __name__ == "__main__":
+    main()
+仅此即可 — 读取 stdin JSON、执行逻辑、输出 stdout JSON。系统处理其余一切。
+---
+高级：扫描位置感知的原地编辑
+普通工具的 stdout JSON 结果会附加到流末尾。但很多场景需要工具感知自己的调用位置，在标记原位做更精细的操作。详见上方「扫描位置感知操作」章节。
+
+快速参考（标记原位编辑三剑客）：
+  stream.insert_after(text)     — 在标记之后插入（标记保留，等 Scanner 删除）
+  stream.replace_in_range(text) — 用结果文本替换标记自身（最纯粹的"原地替换"）
+  stream.get_text_before/after  — 读取标记前后的上下文
+
+工作流示例：
+  import os
+  from text_stream_sdk import System
+  system = System()
+  stream = system.get(os.environ.get("SCAN_STREAM_NAME", ""))
+  
+  # 读取标记前的上下文
+  context = stream.get_text_before()
+  
+  # 基于上下文做处理...
+  result = process(context, params)
+  
+  # 用结果替换标记，完成后标记消失，结果留在原位
+  stream.replace_in_range(f"[结果] {result}")
+  # 此时 Scanner 发现标记已被删除，跳过清理步骤
