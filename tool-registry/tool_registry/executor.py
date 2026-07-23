@@ -88,6 +88,7 @@ class ToolExecutor:
         self.sdk = sdk
         self.console_stream_name = console_stream_name
         self._console_stream = None
+        self._scan_stream_name: Optional[str] = None  # 由 ScanController 在扫描时设置
 
         # 进程跟踪
         self._background_processes: dict[str, BackgroundProcess] = {}
@@ -635,6 +636,10 @@ class ToolExecutor:
         registry_port = os.environ.get("TOOL_REGISTRY_PORT")
         if registry_port:
             env["TOOL_REGISTRY_PORT"] = registry_port
+
+        # ── 扫描上下文变量 ──────────────────────────────────────────
+        if self._scan_stream_name:
+            env["SCAN_STREAM_NAME"] = self._scan_stream_name
 
         return env
 

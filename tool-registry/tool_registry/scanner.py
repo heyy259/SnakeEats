@@ -351,6 +351,7 @@ class ScanController:
                 raise ScannerStateError("scanning", "idle or paused")
             self._state = ScanState.SCANNING
             self._stream_name = stream_name
+            self.executor._scan_stream_name = stream_name
             self._last_logged_position = self.position
             self._last_notify_position = 0.0
             self._last_notify_pos_value = -1
@@ -443,6 +444,7 @@ class ScanController:
             "new_state": "idle",
         })
         self.executor.stop_all()
+        self.executor._scan_stream_name = None
         self._sdk = None
         logger.info("Scan stopped")
         return {"success": True, "state": "idle"}
@@ -845,6 +847,7 @@ class ScanController:
             "normal_failed": self._result.normal_failed,
             "background_started": self._result.background_started,
         })
+        self.executor._scan_stream_name = None
         cb = self._on_scan_complete
         self._on_scan_complete = None
         if cb:
