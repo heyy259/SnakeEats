@@ -39,7 +39,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["text_stream_sdk", "text_stream_system", "text_stream_web"]
+packages = ["text_stream_sdk", "text_stream_system"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
