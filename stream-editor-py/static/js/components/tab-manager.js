@@ -398,6 +398,10 @@ class TabManager {
                 }
                 
                 if (state.activeTabId === tabId && typeof markdownEditor !== 'undefined') {
+                    // 内容未变 → 跳过，不动 DOM / 光标（自通知场景）
+                    if (markdownEditor.getContent() === result.data.content) {
+                        return;
+                    }
                     markdownEditor.setContent(result.data.content);
                 }
             }

@@ -103,6 +103,10 @@ class MarkdownEditor {
         this.updateCursorPosition();
     }
 
+    getContent() {
+        return this.textarea.value;
+    }
+
     insertText(text) {
         const start = this.textarea.selectionStart;
         const end = this.textarea.selectionEnd;
