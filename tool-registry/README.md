@@ -1,49 +1,49 @@
 # tool-registry
 
-面向 LLM 的工具注册管理与扫描执行系统。
+A tool registration, management, scanning, and execution system for LLMs.
 
-## 功能特性
+## Features
 
-### 工具注册管理
+### Tool registration management
 
-- **工具定义**: 支持完整的工具元数据（名称、描述、路径、标签等）
-- **渐进披露**: 多层级描述（简短、标准、详细），适配不同场景
-- **标签系统**: 灵活的标签分类，支持按标签搜索
-- **输入验证**: 基于 JSON Schema 的输入参数验证
-- **持久化**: 工具定义可持久化存储
+- **Tool definitions**: Full tool metadata support (name, description, path, tags, etc.)
+- **Progressive disclosure**: Multi-level descriptions (brief, standard, detailed) to suit different scenarios
+- **Tag system**: Flexible tag-based categorization with tag search support
+- **Input validation**: JSON Schema-based validation of input parameters
+- **Persistence**: Tool definitions can be stored persistently
 
-### 工具扫描执行
+### Tool scanning and execution
 
-- **标记识别**: 自动识别 `@{tool_name|{...}}` 格式的工具调用标记
-- **参数解析**: 解析 JSON 格式的工具参数（支持任意深度嵌套）
-- **工具执行**: 在工具执行路径下执行工具，捕获输出
-- **结果替换**: 用执行结果替换工具调用标记
-- **并行执行**: 连续标记自动并行执行
-- **非阻塞后台执行**: 后台启动工具进程，支持实时流式输出、标准输入交互、进程生命周期管理
+- **Marker recognition**: Automatically recognizes tool call markers in the `@{tool_name|{...}}` format
+- **Parameter parsing**: Parses JSON tool parameters (with arbitrarily deep nesting)
+- **Tool execution**: Runs the tool under its execution path and captures the output
+- **Result replacement**: Replaces tool call markers with execution results
+- **Parallel execution**: Consecutive markers are executed in parallel automatically
+- **Non-blocking background execution**: Starts tool processes in the background with real-time streaming output, stdin interaction, and process lifecycle management
 
-### 扫描控制
+### Scan control
 
-- **状态管理**: 支持开始、暂停、继续、停止扫描
-- **位置控制**: 可移动扫描标记到指定位置
-- **并行执行**: 支持连续工具调用的并行执行
+- **State management**: Start, pause, resume, and stop scanning
+- **Position control**: Move the scan marker to a specific position
+- **Parallel execution**: Parallel execution of consecutive tool calls
 
-## 安装
+## Installation
 
 ```bash
 pip install -e .
 ```
 
-## 快速开始
+## Quick Start
 
-### 1. 注册工具
+### 1. Register a tool
 
 ```python
 from tool_registry import ToolSDK
 
-# 创建 SDK 实例
+# Create an SDK instance
 sdk = ToolSDK(storage_path="tools.json")
 
-# 注册工具
+# Register a tool
 sdk.register_tool(
     name="weather",
     description="查询天气\n输入: {city: str, unit?: str} → 输出: {temperature: float, condition: str}",
@@ -52,10 +52,10 @@ sdk.register_tool(
 )
 ```
 
-### 2. 执行工具
+### 2. Execute a tool
 
 ```python
-# 执行工具
+# Execute the tool
 result = sdk.execute_tool("weather", {"city": "北京", "unit": "celsius"})
 print(result)
 # {
@@ -66,96 +66,98 @@ print(result)
 # }
 ```
 
-### 3. 流式扫描并替换
+### 3. Scan a stream and replace
 
 ```python
-# 需要连接到文本数据流系统
+# Requires a connection to the text stream system
 from tool_registry.sdk import TextStreamToolIntegration
 
-# 创建集成实例
+# Create an integration instance
 integration = TextStreamToolIntegration(sdk)
 
-# 创建流并写入包含工具调用的文本
+# Create a stream and write text that contains tool calls
 stream = text_stream_system.create("my_stream")
 stream.write("""
 今天北京天气: @{weather|{"city":"北京"}}
 上海天气: @{weather|{"city":"上海"}}
 """)
 
-# 流式扫描并替换（逐标记处理）
+# Scan the stream and replace (processed marker by marker)
 result = integration.scan_and_replace_in_stream("my_stream")
 print(result)
 # {"success": True, "state": "idle", "position": 100, ...}
 ```
 
-### 4. 连续标记并行执行
+### 4. Parallel execution of consecutive markers
 
 ```python
-# 连续标记（无间隔）会并行执行
+# Consecutive markers (with no gap between them) are executed in parallel
 stream = text_stream_system.create("consecutive_stream")
 stream.write('@{weather|{"city":"北京"}}@{weather|{"city":"上海"}}@{weather|{"city":"广州"}}')
 
-# 三个工具调用会并行执行
+# The three tool calls are executed in parallel
 result = integration.scan_and_replace_in_stream("consecutive_stream")
 ```
 
-### 5. 扫描控制
+### 5. Scan control
 
 ```python
-# 开始扫描
+# Start scanning
 sdk.start_scan("my_stream")
 
-# 暂停扫描
+# Pause scanning
 sdk.pause_scan()
 
-# 继续扫描
+# Resume scanning
 sdk.resume_scan()
 
-# 停止扫描
+# Stop scanning
 sdk.stop_scan()
 
-# 移动扫描标记
+# Move the scan marker
 sdk.move_scan_marker(100)
 ```
 
-## 工具调用标记格式
+## Tool Call Marker Format
 
 ```
 @{tool_name|{param1: value1, param2: value2}}
 ```
 
-示例:
+Examples:
+
 ```
 @{weather|{"city":"北京","unit":"celsius"}}
 @{humidity|{"city":"北京"}}
-@{filter|{"nested":{"key":"value"}}}  # 支持任意深度嵌套
+@{filter|{"nested":{"key":"value"}}}  # supports arbitrarily deep nesting
 ```
 
-**特性**:
-- 支持任意深度的 JSON 嵌套
-- JSON 字符串中的特殊字符不会干扰解析
-- 连续标记自动并行执行
+**Features**:
 
-### 后台执行标记格式
+- Arbitrarily deep JSON nesting is supported
+- Special characters inside JSON strings do not interfere with parsing
+- Consecutive markers are executed in parallel automatically
 
-使用 `$` 前缀字段在参数 JSON 中声明系统控制字段（执行时自动剥离，不传递给工具）：
+### Background execution marker format
+
+Declare system control fields in the parameter JSON with `$`-prefixed keys. They are stripped automatically at execution time and are not passed to the tool:
 
 ```json
 @{weather|{"$mode":"background","$console_stream":"output","$keep_stdin":"true","$timeout":10,"$process_name":"my_proc","city":"北京"}}
 ```
 
-| 系统字段 | 类型 | 说明 |
+| System field | Type | Description |
 |---------|------|------|
-| `$mode` | string | 执行模式（如 `"background"`） |
-| `$console_stream` | string | 控制台输出流名称 |
-| `$keep_stdin` | string | 是否保持标准输入开放（`"true"` / `"false"`） |
-| `$timeout` | number | 超时时间（秒） |
-| `$process_name` | string | 自定义进程名称，用于后续管理操作 |
-| `$keep_sys_fields` | bool | `true` 时保留 `$` 字段传递到工具参数中 |
+| `$mode` | string | Execution mode (e.g. `"background"`) |
+| `$console_stream` | string | Console output stream name |
+| `$keep_stdin` | string | Whether to keep standard input open (`"true"` / `"false"`) |
+| `$timeout` | number | Timeout in seconds |
+| `$process_name` | string | Custom process name for later management operations |
+| `$keep_sys_fields` | bool | When `true`, keeps the `$` fields and passes them through to the tool parameters |
 
-## 工具定义格式
+## Tool Definition Format
 
-### 基本定义
+### Basic definition
 
 ```json
 {
@@ -166,9 +168,9 @@ sdk.move_scan_marker(100)
 }
 ```
 
-### 渐进披露
+### Progressive disclosure
 
-**层级 1: 简短描述** (用于工具列表)
+**Level 1: Brief description** (used in the tool list)
 ```json
 {
     "name": "weather",
@@ -176,7 +178,7 @@ sdk.move_scan_marker(100)
 }
 ```
 
-**层级 2: 标准描述** (包含 输入→输出)
+**Level 2: Standard description** (includes input → output)
 ```json
 {
     "name": "weather",
@@ -184,7 +186,7 @@ sdk.move_scan_marker(100)
 }
 ```
 
-**层级 3: 详细描述** (多条 输入→输出)
+**Level 3: Detailed description** (multiple input → output pairs)
 ```json
 {
     "name": "weather",
@@ -192,26 +194,26 @@ sdk.move_scan_marker(100)
 }
 ```
 
-## 标签系统
+## Tag System
 
-标签用于工具分类和快速检索:
+Tags are used to categorize tools and find them quickly:
 
 ```python
 tags = {
-    "category": "weather",      # 功能分类
-    "language": "python",       # 实现语言
-    "complexity": "simple",     # 复杂度
-    "io_type": "api",          # I/O 类型
-    "requires_auth": "false",   # 是否需要认证
+    "category": "weather",      # functional category
+    "language": "python",       # implementation language
+    "complexity": "simple",     # complexity
+    "io_type": "api",          # I/O type
+    "requires_auth": "false",   # whether authentication is required
 }
 
-# 按标签搜索
+# Search by tags
 tools = sdk.search_tools("", tags={"category": "weather"})
 ```
 
-## 示例工具
+## Example Tools
 
-### 天气查询工具
+### Weather query tool
 
 ```python
 # examples/weather_tool.py
@@ -222,23 +224,23 @@ import sys
 def main():
     params = json.loads(sys.stdin.read())
     city = params.get("city", "未知城市")
-    
-    # 模拟天气数据
+
+    # Simulated weather data
     weather_data = {
         "北京": {"temperature": 25, "condition": "晴"},
         "上海": {"temperature": 28, "condition": "多云"},
     }
-    
+
     result = weather_data.get(city, {"temperature": 20, "condition": "未知"})
     result["city"] = city
-    
+
     print(json.dumps(result, ensure_ascii=False))
 
 if __name__ == "__main__":
     main()
 ```
 
-### 记忆创建工具
+### Memory creation tool
 
 ```python
 # examples/memory_tool.py
@@ -250,27 +252,27 @@ def main():
     params = json.loads(sys.stdin.read())
     key = params.get("key")
     content = params.get("content")
-    
-    # 保存记忆...
+
+    # Save the memory...
     print(json.dumps({"success": True, "error": None}, ensure_ascii=False))
 
 if __name__ == "__main__":
     main()
 ```
 
-## 与文本数据流系统集成
+## Integrating with the Text Stream System
 
 ```python
 from tool_registry import ToolSDK
 from tool_registry.sdk import TextStreamToolIntegration
 
-# 创建 SDK
+# Create the SDK
 tool_sdk = ToolSDK()
 
-# 连接到文本数据流系统
+# Connect to the text stream system
 integration = TextStreamToolIntegration(tool_sdk)
 
-# 在光标位置插入工具调用
+# Insert a tool call at the cursor position
 integration.insert_tool_call_at_cursor(
     stream_name="my_doc",
     tool_name="weather",
@@ -278,59 +280,59 @@ integration.insert_tool_call_at_cursor(
     cursor_position=100,
 )
 
-# 扫描并替换流中的工具调用
+# Scan the stream and replace tool calls
 result = integration.scan_and_replace_in_stream("my_doc")
 ```
 
-## API 参考
+## API Reference
 
 ### ToolSDK
 
-| 方法 | 说明 |
+| Method | Description |
 |------|------|
-| `register_tool(...)` | 注册工具 |
-| `unregister_tool(name)` | 注销工具 |
-| `get_tool(name)` | 获取工具信息 |
-| `list_tools(tags?)` | 列出工具 |
-| `search_tools(pattern, tags?)` | 搜索工具 |
-| `get_tool_manual(name)` | 获取工具使用手册 |
-| `list_tools_for_llm(tags?)` | 以 LLM 友好格式列出工具 |
-| `get_tool_for_llm(name)` | 获取单个工具的 LLM 视图 |
-| `summarize_tools_for_prompt(tags?)` | 生成工具文本摘要（用于 prompt 注入） |
-| `execute_tool(tool_name, params)` | 执行工具 |
-| `execute_tools_parallel(calls)` | 并行执行多个工具 |
-| `start_background(tool_name, params, process_name?, console_stream?, keep_stdin?, timeout?)` | 非阻塞后台启动工具 |
-| `send_input(process_name, data, append_newline?, encoding?)` | 向后台进程发送输入 |
-| `stop_process(targets, timeout?)` | 终止后台进程（单个/批量，优雅→强制） |
-| `stop_all_processes(timeout?)` | 停止所有后台进程 |
-| `list_processes(tool_name?, status?)` | 列出后台进程（支持过滤） |
-| `get_process_info(process_name)` | 获取进程详细信息 |
-| `format_tool_call(tool_name, params)` | 格式化工具调用标记 |
-| `parse_tool_calls(text)` | 解析文本中的工具调用 |
-| `start_scan(stream_name?)` | 开始扫描 |
-| `pause_scan()` | 暂停扫描 |
-| `resume_scan()` | 继续扫描 |
-| `stop_scan()` | 停止扫描 |
-| `move_scan_marker(position)` | 移动扫描标记 |
-| `get_scan_status()` | 获取扫描状态 |
-| `run_scan(stream_name, ...)` | 同步运行扫描直到完成 |
+| `register_tool(...)` | Register a tool |
+| `unregister_tool(name)` | Unregister a tool |
+| `get_tool(name)` | Get tool information |
+| `list_tools(tags?)` | List tools |
+| `search_tools(pattern, tags?)` | Search tools |
+| `get_tool_manual(name)` | Get the tool manual |
+| `list_tools_for_llm(tags?)` | List tools in an LLM-friendly format |
+| `get_tool_for_llm(name)` | Get the LLM view of a single tool |
+| `summarize_tools_for_prompt(tags?)` | Generate a text summary of the tools (for prompt injection) |
+| `execute_tool(tool_name, params)` | Execute a tool |
+| `execute_tools_parallel(calls)` | Execute multiple tools in parallel |
+| `start_background(tool_name, params, process_name?, console_stream?, keep_stdin?, timeout?)` | Start a tool non-blockingly in the background |
+| `send_input(process_name, data, append_newline?, encoding?)` | Send input to a background process |
+| `stop_process(targets, timeout?)` | Stop background processes (single or batch, graceful → forced) |
+| `stop_all_processes(timeout?)` | Stop all background processes |
+| `list_processes(tool_name?, status?)` | List background processes (with filtering) |
+| `get_process_info(process_name)` | Get detailed process information |
+| `format_tool_call(tool_name, params)` | Format a tool call marker |
+| `parse_tool_calls(text)` | Parse tool calls from text |
+| `start_scan(stream_name?)` | Start scanning |
+| `pause_scan()` | Pause scanning |
+| `resume_scan()` | Resume scanning |
+| `stop_scan()` | Stop scanning |
+| `move_scan_marker(position)` | Move the scan marker |
+| `get_scan_status()` | Get the scan status |
+| `run_scan(stream_name, ...)` | Run scanning synchronously until it completes |
 
 ### ToolDefinition
 
-| 属性 | 说明 |
+| Property | Description |
 |------|------|
-| `name` | 工具唯一标识 |
-| `description` | 工具描述 (必须包含 输入→输出) |
-| `tool_path` | 工具定义文件路径 |
-| `execution_path` | 工具执行路径（默认为 tool_path 所在目录） |
-| `brief_description` | 简短描述 |
-| `detailed_description` | 详细描述 |
-| `manual_path` | 使用手册路径 |
-| `tags` | 自定义标签 |
-| `version` | 工具版本 |
-| `created_at` | 创建时间 |
-| `updated_at` | 更新时间 |
+| `name` | Unique tool identifier |
+| `description` | Tool description (must include input → output) |
+| `tool_path` | Path to the tool definition file |
+| `execution_path` | Tool execution path (defaults to the directory of `tool_path`) |
+| `brief_description` | Brief description |
+| `detailed_description` | Detailed description |
+| `manual_path` | Path to the manual |
+| `tags` | Custom tags |
+| `version` | Tool version |
+| `created_at` | Creation time |
+| `updated_at` | Last update time |
 
-## 许可证
+## License
 
 Apache-2.0 License

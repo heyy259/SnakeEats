@@ -1,28 +1,28 @@
 ---
-name: Bug 报告
-about: 报告一个 bug 帮助我们改进
+name: Bug Report
+about: Report a bug to help us improve
 title: "[BUG] "
 labels: bug
 assignees: ''
 ---
 
-**Bug 描述**
-清晰简洁地描述这个 bug 是什么。
+**Bug Description**
+A clear and concise description of what the bug is.
 
-**复现步骤**
-1. 执行 '...'
-2. 看到错误 '...'
+**Steps to Reproduce**
+1. Go to '...'
+2. See the error '...'
 
-**期望行为**
-你期望发生什么。
+**Expected Behavior**
+What you expected to happen.
 
-**环境信息**
+**Environment**
 - OS: [e.g. Windows 11, macOS 14, Ubuntu 24.04]
-- Python 版本: [e.g. 3.10.12]
-- SnakeEats 版本/commit: [e.g. 50eff5a]
+- Python version: [e.g. 3.10.12]
+- SnakeEats version/commit: [e.g. 50eff5a]
 
-**日志 / 错误输出**
-如果有错误日志，请粘贴在这里。用 \`\`\` 包裹。
+**Logs / Error Output**
+If you have error logs, paste them here. Wrap them in \`\`\`.
 
-**补充说明**
-任何额外的上下文。
+**Additional Context**
+Any other context.

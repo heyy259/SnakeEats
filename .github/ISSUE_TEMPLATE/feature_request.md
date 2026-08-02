@@ -1,22 +1,22 @@
 ---
-name: 功能建议
-about: 为 SnakeEats 提出一个新功能或改进
+name: Feature Request
+about: Suggest a new feature or improvement for SnakeEats
 title: "[FEATURE] "
 labels: enhancement
 assignees: ''
 ---
 
-**你的需求是否与某个问题相关？**
-清晰简洁地描述问题是什么。例如：当 [...] 时我总是感到困扰。
+**Is your feature request related to a problem?**
+A clear and concise description of what the problem is. For example: I'm always frustrated when [...].
 
-**你期望的解决方案**
-描述你希望发生的事情。
+**Describe the solution you'd like**
+A description of what you want to happen.
 
-**你考虑过的替代方案**
-你考虑过的其他方案或变通办法。
+**Describe alternatives you've considered**
+Other approaches or workarounds you've considered.
 
-**使用场景**
-描述这个功能会在什么场景下被使用。
+**Use Case**
+Describe the scenario where this feature would be used.
 
-**补充说明**
-任何额外的上下文或截图。
+**Additional Context**
+Any other context or screenshots.

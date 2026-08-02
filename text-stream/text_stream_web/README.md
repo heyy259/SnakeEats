@@ -1,161 +1,161 @@
-# text-stream - 前端UI
+# text-stream - Web UI
 
-纯静态网页应用，用于管理和操作文本数据流系统。
+A purely static web application for managing and operating the text stream system.
 
-## 功能特性
+## Features
 
-- WebSocket连接管理
-- 流管理（创建、删除、查询、搜索）
-- 内容编辑（读取、写入、追加、插入、删除、替换）
-- 语义层搜索（搜索、框选搜索）
-- 实时订阅（订阅、取消订阅、变更通知）
-- 元数据管理（描述、标签、重命名）
-- 版本控制（撤销操作）
+- WebSocket connection management
+- Stream management (create, delete, query, search)
+- Content editing (read, write, append, insert, delete, replace)
+- Semantic-layer search (search, box-selection search)
+- Real-time subscriptions (subscribe, unsubscribe, change notifications)
+- Metadata management (description, tags, rename)
+- Version control (undo operations)
 
-## 快速开始（推荐）
+## Quick Start (Recommended)
 
-### 一键启动
+### One-command startup
 
 ```bash
 python start.py
 ```
 
-这将同时启动：
-- text-stream（WebSocket服务，端口9876）
-- 前端UI的HTTP服务器（端口8080）
+This starts both:
+- text-stream (WebSocket server, port 9876)
+- the HTTP server for the web UI (port 8080)
 
-启动后会自动打开浏览器访问 http://localhost:8080
+Once started, it automatically opens the browser at http://localhost:8080
 
-### 手动启动
+### Manual startup
 
-1. 启动文本数据流系统：
+1. Start the text stream system:
    ```python
    from text_stream_system.system import TextStreamSystem
    import asyncio
-   
+
    system = asyncio.run(TextStreamSystem.start(port=9876))
    ```
 
-2. 在浏览器中打开 `text_stream_web/index.html`
+2. Open `text_stream_web/index.html` in the browser
 
-3. 系统会自动连接到 `ws://localhost:9876`
+3. The system connects automatically to `ws://localhost:9876`
 
-## 配置
+## Configuration
 
-通过URL参数配置：
+Configure via URL parameters:
 
 ```
 index.html?port=9876&token=your_token
 ```
 
-配置项：
-- `port`: WebSocket服务端口（默认：9876）
-- `token`: 认证token（可选）
+Options:
+- `port`: WebSocket server port (default: 9876)
+- `token`: Authentication token (optional)
 
-配置会自动保存到本地存储。
+The configuration is saved to local storage automatically.
 
-## 文件结构
+## File Structure
 
 ```
 text_stream_web/
-├── index.html              # 主页面
+├── index.html              # main page
 ├── css/
-│   └── style.css           # 主样式（含响应式）
+│   └── style.css           # main stylesheet (responsive)
 ├── js/
-│   ├── app.js              # 应用入口
-│   ├── websocket.js        # WebSocket客户端
-│   ├── streams.js          # 流管理逻辑
-│   └── subscriptions.js    # 订阅管理
+│   ├── app.js              # application entry point
+│   ├── websocket.js        # WebSocket client
+│   ├── streams.js          # stream management logic
+│   └── subscriptions.js    # subscription management
 └── assets/
-    └── icons/              # 图标资源
+    └── icons/              # icon assets
 ```
 
-## 使用说明
+## Usage
 
-### 连接管理
+### Connection management
 
-- 点击"连接"按钮手动连接
-- 点击"断开"按钮断开连接
-- 连接断开后会自动重连（最多5次）
+- Click the "Connect" button to connect manually
+- Click the "Disconnect" button to disconnect
+- Reconnects automatically after a disconnect (up to 5 times)
 
-### 流管理
+### Stream management
 
-- 左侧面板显示所有流
-- 点击流查看详情
-- 使用搜索框过滤流
-- 点击"+ 新建流"创建新流
+- The left panel lists all streams
+- Click a stream to view its details
+- Use the search box to filter streams
+- Click "+ New Stream" to create a stream
 
-### 内容编辑
+### Content editing
 
-- "内容"标签页显示流内容
-- 使用工具栏按钮执行操作
-- 使用搜索框搜索内容
-- 点击搜索结果定位到匹配位置
+- The "Content" tab shows the stream content
+- Use the toolbar buttons to perform operations
+- Use the search box to search the content
+- Click a search result to jump to the matching position
 
-### 订阅管理
+### Subscription management
 
-- "订阅"标签页管理订阅
-- 点击"订阅"按钮订阅流
-- 实时显示变更通知
-- 点击"取消订阅"取消订阅
+- The "Subscriptions" tab manages subscriptions
+- Click the "Subscribe" button to subscribe to a stream
+- Change notifications appear in real time
+- Click "Unsubscribe" to cancel a subscription
 
-### 元数据管理
+### Metadata management
 
-- "元数据"标签页管理元数据
-- 编辑描述并点击"更新"
-- 添加/删除标签
-- 重命名流
+- The "Metadata" tab manages metadata
+- Edit the description and click "Update"
+- Add or remove tags
+- Rename a stream
 
-## 技术栈
+## Tech Stack
 
 - HTML5
 - CSS3 (CSS Grid/Flexbox)
 - ES6+ JavaScript
 - WebSocket API
 
-## 浏览器支持
+## Browser Support
 
 - Chrome 60+
 - Firefox 55+
 - Safari 11+
 - Edge 79+
 
-## 开发
+## Development
 
-无需构建步骤，直接编辑文件即可。
+No build step is required; edit the files directly.
 
-### 调试
+### Debugging
 
-打开浏览器开发者工具（F12），查看控制台日志。
+Open the browser developer tools (F12) and check the console logs.
 
-### 扩展
+### Extending
 
-如需添加新功能：
+To add new features:
 
-1. 在对应的JS文件中添加逻辑
-2. 在HTML中添加UI元素
-3. 在CSS中添加样式
-4. 在app.js中绑定事件
+1. Add the logic in the corresponding JS file
+2. Add the UI elements in the HTML
+3. Add the styles in the CSS
+4. Wire up the events in app.js
 
-## 常见问题
+## FAQ
 
-### 连接失败
+### Connection fails
 
-- 检查文本数据流系统是否正在运行
-- 检查端口是否正确
-- 检查防火墙设置
+- Check that the text stream system is running
+- Check that the port is correct
+- Check the firewall settings
 
-### 认证失败
+### Authentication fails
 
-- 检查token是否正确
-- 检查系统是否启用了认证
+- Check that the token is correct
+- Check whether authentication is enabled on the system
 
-### 操作失败
+### Operations fail
 
-- 检查流是否存在
-- 检查是否有写锁冲突
-- 查看控制台错误信息
+- Check that the stream exists
+- Check for write-lock conflicts
+- Check the console error messages
 
-## 许可证
+## License
 
-MIT
+Apache-2.0, see [LICENSE](../../LICENSE) at the repository root.

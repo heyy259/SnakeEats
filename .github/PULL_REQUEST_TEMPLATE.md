@@ -1,24 +1,24 @@
-## 变更描述
+## Description of Changes
 
-<!-- 简要描述这个 PR 做了什么 -->
+<!-- Briefly describe what this PR does -->
 
-## 变更类型
+## Type of Change
 
-- [ ] Bug 修复
-- [ ] 新功能
-- [ ] 代码重构
-- [ ] 文档更新
-- [ ] 其他（请说明）
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Refactoring
+- [ ] Documentation update
+- [ ] Other (please specify)
 
-## 测试
+## Testing
 
-- [ ] 我已运行现有测试套件
-- [ ] 我已为新功能添加测试
-- [ ] 所有测试通过
+- [ ] I have run the existing test suite
+- [ ] I have added tests for new functionality
+- [ ] All tests pass
 
-## 检查清单
+## Checklist
 
-- [ ] 代码符合项目现有风格
-- [ ] 没有引入新的 lint 警告
-- [ ] 如果涉及 API 变更，已更新相关文档
-- [ ] commit message 清晰描述了变更内容
+- [ ] Code follows the existing project style
+- [ ] No new lint warnings introduced
+- [ ] Related documentation updated for any API changes
+- [ ] Commit message clearly describes the changes
