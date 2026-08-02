@@ -32,13 +32,13 @@ class ScanControl {
             this._onActiveTabChanged();
         });
 
-        // 监听 WebSocket 推送的扫描事件（替代轮询）
+        // Listen for scan events pushed via WebSocket (replaces polling)
         state.on('scanWSStateChange', (data) => this._onScanStateChanged(data));
         state.on('scanPositionUpdated', (data) => this._onScanPositionUpdated(data));
         state.on('scanCompleted', (change) => this._handleScanCompleted(change));
         state.on('scanError', (change) => this._handleScanError(change));
 
-        // 恢复后端扫描状态 — 页面加载时 / WebSocket 重连后
+        // Restore backend scan state — on page load / after WebSocket reconnect
         state.on('activeSystemChanged', () => this.checkBackendState());
         state.on('wsReconnected', () => this.checkBackendState());
     }
@@ -69,7 +69,7 @@ class ScanControl {
             this.positionInfo.style.display = 'block';
             const pos = scanState.currentPosition || 0;
 
-            // 使用扫描目标tab内容做行/列换算（不是激活tab）
+            // Use the scanned tab's content for row/col calculation (not the active tab)
             const text = this._getScannedTabContent();
             const { row, col } = charOffsetToRowCol(pos, text);
             this.posRowCol.textContent = `Ln ${row}, Col ${col}`;
@@ -78,7 +78,7 @@ class ScanControl {
             this.posBefore.textContent = before;
             this.posAfter.textContent = after;
 
-            // 仅当扫描目标tab是当前激活tab时才在编辑器显示标记
+            // Only show the marker in the editor when the scanned tab is the active tab
             const scannedTabId = this._getScannedTabId();
             const activeTab = state.getActiveTab();
             if (typeof markdownEditor !== 'undefined') {
@@ -89,12 +89,12 @@ class ScanControl {
                 }
             }
 
-            // 推送到tab标签页显示（不再节流——WS推送已是300ms节流）
+            // Push to the tab label display (no longer throttled — WS push is already throttled to 300ms)
             if (scannedTabId) {
                 state.emit('scanPositionForTab', { row, col, tabId: scannedTabId });
             }
 
-            // 显示扫描目标流名
+            // Display the scanned target stream name
             this._updateScanStreamDisplay(scanState.streamName);
         } else {
             this.positionInfo.style.display = 'none';
@@ -138,7 +138,7 @@ class ScanControl {
     _handleScanCompleted(change) {
         this._stopPositionPolling();
 
-        // 更新最终统计（如果 scan_complete 事件携带了数据）
+        // Update final stats (if the scan_complete event carried data)
         if (change && state.scanState) {
             state.scanState.normalSucceeded = change.normal_succeeded;
             state.scanState.normalFailed = change.normal_failed;
@@ -188,7 +188,7 @@ class ScanControl {
         if (!state.scanState) return;
         const newStatus = data.status?.toLowerCase() || 'idle';
         state.scanState.status = newStatus;
-        // 直接调用 updateUI，不要 emit 'scanStateChanged'（会导致无限递归）
+        // Call updateUI directly, don't emit 'scanStateChanged' (would cause infinite recursion)
         this.updateUI(state.scanState);
         this.updateButtons();
     }
@@ -196,7 +196,7 @@ class ScanControl {
     _onScanPositionUpdated(data) {
         if (!state.scanState) return;
         state.scanState.currentPosition = data.position || 0;
-        // totalSize 不再使用 — totalLength 已按用户要求清理
+        // totalSize no longer used — totalLength removed per user request
         this.updateUI(state.scanState);
     }
 
@@ -276,7 +276,7 @@ class ScanControl {
             });
             state.lockTab(activeTab.id, true);
             state.markTabModified(activeTab.id, false);
-            // 如果 WebSocket 连接可用，依赖推送；否则回退到轮询
+            // Rely on push if the WebSocket connection is available; otherwise fall back to polling
             if (typeof tabManager !== 'undefined' && tabManager.subscriptionManager?.isConnected()) {
                 console.log('[ScanControl] Using WebSocket push for scan updates');
             } else {
@@ -339,9 +339,9 @@ class ScanControl {
         if (result.success) {
             state.scanState.currentPosition = position;
             this.updateUI(state.scanState);
-            this.showToast('扫描位置已设置', 'success');
+            this.showToast('Scan position set', 'success');
         } else {
-            this.showToast('设置失败: ' + (result.error || 'Unknown'), 'error');
+            this.showToast('Failed to set position: ' + (result.error || 'Unknown'), 'error');
         }
     }
 
@@ -368,10 +368,10 @@ class ScanControl {
         window.showToast(message, type, 5000);
     }
 
-    // ── 扫描目标tab定位工具 ──
+    // ── Scanned tab targeting helpers ──
 
     /**
-     * 获取扫描目标tab的ID
+     * Get the ID of the scanned target tab
      * @returns {string|null}
      */
     _getScannedTabId() {
@@ -380,7 +380,7 @@ class ScanControl {
     }
 
     /**
-     * 获取扫描目标tab的编辑器文本内容
+     * Get the editor text content of the scanned target tab
      * @returns {string}
      */
     _getScannedTabContent() {
@@ -391,7 +391,7 @@ class ScanControl {
     }
 
     /**
-     * 激活tab切换事件处理 — 恢复或清除扫描位置标记
+     * Active tab change handler — restore or clear the scan position marker
      */
     _onActiveTabChanged() {
         if (!state.scanState) return;
@@ -402,9 +402,9 @@ class ScanControl {
         const activeTab = state.getActiveTab();
 
         if (activeTab && activeTab.id === scannedTabId) {
-            // 切换回扫描目标tab → 恢复标记和位置显示
-            // 注意：markdownEditor.setContent() 在 activeTabChanged 事件之后才调用，
-            // 所以需要用 setTimeout(0) 延后到 setContent 完成之后执行
+            // Switched back to the scanned tab → restore the marker and position display
+            // Note: markdownEditor.setContent() is called after the activeTabChanged event,
+            // so use setTimeout(0) to run after setContent has completed
             setTimeout(() => {
                 if (typeof markdownEditor !== 'undefined' && state.scanState) {
                     markdownEditor.showScanPosition(state.scanState.currentPosition || 0);
@@ -412,14 +412,14 @@ class ScanControl {
             }, 0);
             this._refreshPositionDisplay();
         } else {
-            // 切换离开扫描目标tab → 清除标记
+            // Switched away from the scanned tab → clear the marker
             if (typeof markdownEditor !== 'undefined') {
                 markdownEditor.removeScanPosition();
             }
         }
     }
 
-    /** 强制刷新位置显示（行/列、前后字符、stream名） */
+    /** Force refresh the position display (row/col, surrounding chars, stream name) */
     _refreshPositionDisplay() {
         if (!state.scanState) return;
         const status = (state.scanState.status || '').toLowerCase();
@@ -437,7 +437,7 @@ class ScanControl {
         this._updateScanStreamDisplay(state.scanState.streamName);
     }
 
-    /** 显示/隐藏扫描目标流名 */
+    /** Show/hide the scanned target stream name */
     _updateScanStreamDisplay(streamName) {
         const el = document.getElementById('scan-target-stream');
         if (!el) return;

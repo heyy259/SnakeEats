@@ -58,7 +58,7 @@ class MarkdownEditor {
             this.updateCursorPosition();
         });
 
-        // 扫描期间仅禁止用户编辑，但保持订阅更新（内容仍可被后端推送刷新）
+        // During scanning, only block user editing but keep subscription updates (content can still be refreshed via backend push)
         state.on('tabLocked', ({ tabId, locked }) => {
             const activeTab = state.getActiveTab();
             if (activeTab && activeTab.id === tabId && this.textarea) {
@@ -172,7 +172,7 @@ class MarkdownEditor {
 
         const lineNumber = text.substring(0, charOffset).split('\n').length;
 
-        // 动态获取实际行高和 padding（替代硬编码 22.4）
+        // Dynamically get the actual line height and padding (instead of the hardcoded 22.4)
         const computedStyle = window.getComputedStyle(this.textarea);
         const lineHeight = parseFloat(computedStyle.lineHeight) || 22.4;
         const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
@@ -180,7 +180,7 @@ class MarkdownEditor {
 
         const y = (lineNumber - 1) * lineHeight + paddingTop - scrollTop;
 
-        // 主标记箭头
+        // Main marker arrow
         const marker = document.createElement('div');
         marker.className = 'scan-position-indicator';
         marker.id = 'scan-position-indicator';
@@ -188,7 +188,7 @@ class MarkdownEditor {
         marker.style.top = `${Math.max(0, y)}px`;
         this.container.appendChild(marker);
 
-        // 行高亮背景
+        // Line highlight background
         const highlight = document.createElement('div');
         highlight.id = 'scan-line-highlight';
         highlight.className = 'scan-line-highlight';

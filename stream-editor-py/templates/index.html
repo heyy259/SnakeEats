@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -165,15 +165,15 @@
                     </div>
                     <div id="scan-position-info" class="scan-position-info" style="display: none;">
                         <div class="position-stream">
-                            <span class="position-label">扫描目标:</span>
+                            <span class="position-label">Scan target:</span>
                             <span id="scan-target-stream" class="position-value">-</span>
                         </div>
                         <div class="position-rowcol">
-                            <span class="position-label">扫描位置:</span>
+                            <span class="position-label">Scan position:</span>
                             <span id="scan-pos-rowcol" class="position-value">Ln 1, Col 1</span>
                         </div>
                         <div class="position-context">
-                            <span class="context-label">附近:</span>
+                            <span class="context-label">Nearby:</span>
                             <span id="scan-pos-before" class="context-before"></span>
                             <span class="context-cursor">▼</span>
                             <span id="scan-pos-after" class="context-after"></span>
@@ -196,18 +196,18 @@
                     </div>
                 </div>
 
-                <!-- Tool Interaction Bar — 始终可见 -->
+                <!-- Tool Interaction Bar - Always visible -->
                 <div id="tool-interaction-bar" class="tool-interaction-bar">
                     <div class="target-list" id="target-list">
-                        <span class="target-placeholder">无可交互的后台进程</span>
+                        <span class="target-placeholder">No interactive background processes</span>
                     </div>
                     <div class="output-log" id="output-log" style="display:none;"></div>
                     <div class="interaction-input-row">
-                        <span id="selected-target-label" class="selected-target-label">选择进程后输入...</span>
+                        <span id="selected-target-label" class="selected-target-label">Select a process to start typing...</span>
                         <textarea id="interaction-input" class="interaction-input"
-                                  placeholder="选择目标后输入，Enter 发送，Shift/Ctrl+Enter 换行"
+                                  placeholder="Select a target to start typing, Enter to send, Shift/Ctrl+Enter for a new line"
                                   disabled rows="3"></textarea>
-                        <button id="send-interaction-btn" class="btn btn-sm btn-primary" disabled>发送</button>
+                        <button id="send-interaction-btn" class="btn btn-sm btn-primary" disabled>Send</button>
                     </div>
                 </div>
             </main>
@@ -593,7 +593,7 @@
 
     <!-- Scripts -->
     <script>
-        // WebSocket 端口配置
+        // WebSocket port configuration
         window.WEBSOCKET_PORT = {{ websocket_port | default(6000) }};
     </script>
     <script src="/static/js/api-client.js"></script>

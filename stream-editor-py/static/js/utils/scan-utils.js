@@ -1,15 +1,15 @@
 /**
- * 扫描位置换算工具函数
+ * Scan position conversion utility functions
  *
- * 提供字符偏移 → 行/列转换、前后字符截取，
- * 供 scan-control、tab-manager、位置预览共用。
+ * Provides character offset → row/col conversion and surrounding character extraction,
+ * shared by scan-control, tab-manager, and the position preview.
  */
 
 /**
- * 字符偏移 → 行/列转换（基于编辑器内容）
- * @param {number} offset - 字符偏移量（0-based）
- * @param {string} text - 流完整内容字符串
- * @returns {{row: number, col: number}} 行号和列号（均为 1-based）
+ * Character offset → row/col conversion (based on editor content)
+ * @param {number} offset - character offset (0-based)
+ * @param {string} text - full stream content string
+ * @returns {{row: number, col: number}} row and column numbers (both 1-based)
  */
 function charOffsetToRowCol(offset, text) {
     if (!text || offset <= 0) return { row: 1, col: 1 };
@@ -20,10 +20,10 @@ function charOffsetToRowCol(offset, text) {
 }
 
 /**
- * 获取偏移位置前N个字符和后N个字符
- * @param {number} offset - 字符偏移量
- * @param {string} text - 流完整内容字符串
- * @param {number} count - 前后截取的字符数（默认5）
+ * Get N characters before and after the offset position
+ * @param {number} offset - character offset
+ * @param {string} text - full stream content string
+ * @param {number} count - number of characters to extract on each side (default 5)
  * @returns {{before: string, after: string}}
  */
 function getSurroundingChars(offset, text, count = 5) {

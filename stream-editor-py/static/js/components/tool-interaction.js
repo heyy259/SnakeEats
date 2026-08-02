@@ -1,13 +1,13 @@
 /**
- * Tool Interaction Bar — 精简交互输入栏
+ * Tool Interaction Bar — streamlined interactive input bar
  *
- * 功能：
- * - 只显示可交互后台进程（keep_stdin===true），组合标签 tool_name + process_name
- * - 点击选中目标
- * - textarea 输入，Enter 发送，Shift/Ctrl+Enter 换行
- * - 支持 @toolName|{params} 工具调用
- * - 输出日志（工具执行结果、进程输出等）
- * - WS 事件驱动刷新，断连时降级 1s 轮询
+ * Features:
+ * - Only shows interactive background processes (keep_stdin===true), combining labels tool_name + process_name
+ * - Click to select a target
+ * - textarea input, Enter to send, Shift/Ctrl+Enter for newline
+ * - Supports @toolName|{params} tool calls
+ * - Output log (tool execution results, process output, etc.)
+ * - WS event-driven refresh, falling back to 1s polling when disconnected
  */
 class ToolInteractionBar {
     constructor() {
@@ -28,20 +28,20 @@ class ToolInteractionBar {
 
     _setupListeners() {
         this.input.addEventListener('keydown', (e) => {
-            // Enter 发送（不含 Shift/Ctrl）
+            // Enter sends (without Shift/Ctrl)
             if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
                 e.preventDefault();
                 this._send();
             }
-            // Shift+Enter 或 Ctrl+Enter → 默认行为（插入换行）
+            // Shift+Enter or Ctrl+Enter → default behavior (insert newline)
         });
         this.sendBtn.addEventListener('click', () => this._send());
 
-        // 监听 WebSocket 推送的进程事件（替代轮询）
+        // Listen for process events pushed via WebSocket (replaces polling)
         state.on('processStarted', (change) => this._onProcessStarted(change));
         state.on('processExited', (change) => this._onProcessExited(change));
 
-        // 新扫描开始时清理输出日志
+        // Clear the output log when a new scan starts
         state.on('scanWSStateChange', (evt) => {
             if (evt.status === 'scanning' && evt.oldStatus !== 'scanning') {
                 this.clearOutput();
@@ -49,7 +49,7 @@ class ToolInteractionBar {
         });
     }
 
-    // ── 发送 ──
+    // ── Send ──
 
     async _send() {
         const message = this.input.value.trim();
@@ -69,7 +69,7 @@ class ToolInteractionBar {
         }
     }
 
-    // ── 输出日志 ──
+    // ── Output log ──
 
     addOutput(message, type) {
         if (!this.outputLog) return;
@@ -88,13 +88,13 @@ class ToolInteractionBar {
         }
     }
 
-    // ── 进程列表刷新 ──
+    // ── Process list refresh ──
 
     async _refresh() {
         try {
             const result = await api.listProcesses(null, 'alive');
             if (result.success) {
-                // 只保留可交互输入的进程（keep_stdin === true）
+                // Keep only processes that accept interactive input (keep_stdin === true)
                 this.processCache = (result.data || []).filter(p => p.keep_stdin === true);
             }
         } catch (e) { /* silent */ }
@@ -102,7 +102,7 @@ class ToolInteractionBar {
     }
 
     _onProcessStarted(change) {
-        // 后台进程启动 → 刷新列表
+        // Background process started → refresh the list
         this._refresh();
     }
 
@@ -117,12 +117,12 @@ class ToolInteractionBar {
     }
 
     _startRefresh() {
-        this._refresh();  // 初始加载
+        this._refresh();  // initial load
 
-        // WS 重连后立即刷新
+        // Refresh immediately after WS reconnect
         state.on('wsReconnected', () => this._refresh());
 
-        // 降级兜底：WS断连且正在扫描时 1s 轮询
+        // Fallback: 1s polling when WS is disconnected and scanning is in progress
         this.refreshTimer = setInterval(() => {
             const wsConnected = typeof tabManager !== 'undefined'
                 && tabManager.subscriptionManager?.isConnected();
@@ -138,11 +138,11 @@ class ToolInteractionBar {
             && state.scanState.status.toLowerCase() === 'scanning';
     }
 
-    // ── 渲染进程条目 ──
+    // ── Render process entries ──
 
     _renderTargets() {
         if (this.processCache.length === 0) {
-            this.targetList.innerHTML = '<span class="target-placeholder">无可交互的后台进程</span>';
+            this.targetList.innerHTML = '<span class="target-placeholder">No interactive background processes</span>';
             return;
         }
 
@@ -152,36 +152,36 @@ class ToolInteractionBar {
             return `<div class="target-item ${isSel ? 'selected' : ''}"
                          data-process="${this._esc(p.process_name)}">
                 <span class="target-label">${this._esc(label)}</span>
-                <button class="btn-stop-process" data-process="${this._esc(p.process_name)}" title="停止进程">✕</button>
+                <button class="btn-stop-process" data-process="${this._esc(p.process_name)}" title="Stop process">✕</button>
             </div>`;
         }).join('');
 
         this.targetList.querySelectorAll('.target-item').forEach(el => {
             el.addEventListener('click', (e) => {
-                // 不拦截 stop 按钮的点击
+                // Don't intercept clicks on the stop button
                 if (e.target.closest('.btn-stop-process')) return;
                 this._select(el.dataset.process);
             });
         });
 
-        // 停止按钮事件
+        // Stop button events
         this.targetList.querySelectorAll('.btn-stop-process').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const pn = btn.dataset.process;
                 const proc = this.processCache.find(p => p.process_name === pn);
                 const label = proc ? `${proc.tool_name} (${pn})` : pn;
-                if (!confirm(`确定要停止进程 "${label}" 吗？`)) return;
+                if (!confirm(`Are you sure you want to stop process "${label}"?`)) return;
                 try {
                     const result = await api.stopProcess(pn, 2);
                     if (result.success) {
-                        this.addOutput(`已停止进程 ${label}`, 'system');
+                        this.addOutput(`Process ${label} stopped`, 'system');
                         this._refresh();
                     } else {
-                        this.addOutput(`停止进程失败: ${result.error || 'unknown'}`, 'error');
+                        this.addOutput(`Failed to stop process: ${result.error || 'unknown'}`, 'error');
                     }
                 } catch (e) {
-                    this.addOutput(`停止进程出错: ${e.message}`, 'error');
+                    this.addOutput(`Error stopping process: ${e.message}`, 'error');
                 }
             });
         });
@@ -204,7 +204,7 @@ class ToolInteractionBar {
         this.selectedProcess = proc;
         this.input.disabled = false;
         this.sendBtn.disabled = false;
-        this.input.placeholder = `发送到 ${proc.tool_name} + ${proc.process_name}，Enter 发送，Shift/Ctrl+Enter 换行`;
+        this.input.placeholder = `Send to ${proc.tool_name} + ${proc.process_name}, Enter to send, Shift/Ctrl+Enter for newline`;
         this.selectedLabel.textContent = `\u25B6 ${proc.tool_name} \u2014 ${proc.process_name}`;
         this.input.focus();
         this._renderTargets();
@@ -215,8 +215,8 @@ class ToolInteractionBar {
         this.input.disabled = true;
         this.sendBtn.disabled = true;
         this.input.value = '';
-        this.input.placeholder = '选择目标后输入，Enter 发送，Shift/Ctrl+Enter 换行';
-        this.selectedLabel.textContent = '选择进程后输入...';
+        this.input.placeholder = 'Select a target to start typing, Enter to send, Shift/Ctrl+Enter for newline';
+        this.selectedLabel.textContent = 'Select a process to start typing...';
         this._renderTargets();
     }
 

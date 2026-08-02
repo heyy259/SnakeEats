@@ -42,7 +42,7 @@ class ToolPanel {
 
         state.on('toolsChanged', () => this.render());
 
-        // 监听 WebSocket 推送的工具注册表变更
+        // Listen for tool registry changes pushed via WebSocket
         state.on('toolRegistryChanged', (change) => this._onToolRegistryChanged(change));
 
         // Close dropdown when clicking outside
@@ -77,13 +77,13 @@ class ToolPanel {
     }
 
     /**
-     * 工具注册表变更通知处理（来自 WebSocket 推送）
+     * Tool registry change notification handler (pushed via WebSocket)
      * @param {Object} change - { type: "registered"|"unregistered", tool_name, tool_definition }
      */
     _onToolRegistryChanged(change) {
         console.log('[ToolPanel] Registry changed:', change.type, change.tool_name);
 
-        // 防抖：避免与 HTTP 响应后的 loadTools() 重复刷新
+        // Debounce: avoid duplicate refreshes with loadTools() after HTTP responses
         if (this._reloadTimer) clearTimeout(this._reloadTimer);
         this._reloadTimer = setTimeout(() => {
             this.loadTools();
@@ -785,8 +785,8 @@ class ToolPanel {
             });
         });
 
-        // Browse → 直接打开系统原生目录选择对话框（与 Save As 的 btn-browse-save-dir 一致），
-        // 不再弹出 "Recent Output Directories" 历史窗口（该窗口会被原生 <dialog> 的 top layer 遮挡而无法使用）。
+        // Browse → directly open the system native directory picker (consistent with btn-browse-save-dir in Save As),
+        // no longer show the "Recent Output Directories" history window (it is obscured by the native <dialog> top layer and cannot be used).
         document.getElementById('btn-browse-save-tools-dir').onclick = async () => {
             const r = await api.selectDirectory();
             if (r.success && r.data.path) {
@@ -832,8 +832,8 @@ class ToolPanel {
     }
 
     async loadToolsConfig() {
-        // 直接打开系统原生文件选择对话框（与 file-manager pickFile 的 __browse__ 分支一致），
-        // 不再弹出 "Recent Tool Config Files" 历史窗口。
+        // Directly open the system native file picker (consistent with the __browse__ branch in file-manager pickFile),
+        // no longer show the "Recent Tool Config Files" history window.
         const r = await api.selectFile([["JSON Config", "*.json"], ["All Files", "*.*"]]);
         if (!r.success || !r.data.path) return;
         const path = r.data.path;

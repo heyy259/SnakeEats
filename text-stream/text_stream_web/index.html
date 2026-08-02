@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,149 +8,149 @@
 </head>
 <body>
     <div id="app">
-        <!-- 顶部栏 -->
+        <!-- Header -->
         <header id="header">
             <div class="system-status">
-                <span id="connection-status">未连接</span>
+                <span id="connection-status">Disconnected</span>
                 <span id="system-id">-</span>
                 <span id="port">-</span>
             </div>
             <div class="system-controls">
-                <button id="btn-connect">连接</button>
-                <button id="btn-disconnect" disabled>断开</button>
+                <button id="btn-connect">Connect</button>
+                <button id="btn-disconnect" disabled>Disconnect</button>
             </div>
         </header>
 
-        <!-- 主内容区 -->
+        <!-- Main content area -->
         <main id="main">
-            <!-- 左侧面板 -->
+            <!-- Left panel -->
             <aside id="sidebar">
-                <!-- 流列表 -->
+                <!-- Stream list -->
                 <section id="stream-list-section">
-                    <h3>流列表</h3>
-                    <input type="text" id="stream-search" placeholder="搜索流...">
+                    <h3>Streams</h3>
+                    <input type="text" id="stream-search" placeholder="Search streams...">
                     <div id="stream-list"></div>
-                    <button id="btn-create-stream">+ 新建流</button>
+                    <button id="btn-create-stream">+ New Stream</button>
                 </section>
 
-                <!-- 订阅面板 -->
+                <!-- Subscriptions panel -->
                 <section id="subscriptions-section">
-                    <h3>活跃订阅</h3>
+                    <h3>Active Subscriptions</h3>
                     <div id="subscriptions-list"></div>
                 </section>
             </aside>
 
-            <!-- 右侧主面板 -->
+            <!-- Right main panel -->
             <section id="content-panel">
-                <!-- 流详情 -->
+                <!-- Stream details -->
                 <div id="stream-detail" style="display: none;">
                     <div class="stream-header">
                         <h2 id="stream-name">-</h2>
                         <div class="stream-meta">
                             <span id="stream-version">v0</span>
                             <span id="stream-description">-</span>
-                            <button id="btn-delete-stream">删除流</button>
+                            <button id="btn-delete-stream">Delete Stream</button>
                         </div>
                         <div id="stream-tags"></div>
                     </div>
 
-                    <!-- 标签页 -->
+                    <!-- Tabs -->
                     <div class="tabs">
-                        <button class="tab active" data-tab="content">内容</button>
-                        <button class="tab" data-tab="metadata">元数据</button>
-                        <button class="tab" data-tab="subscribe">订阅</button>
+                        <button class="tab active" data-tab="content">Content</button>
+                        <button class="tab" data-tab="metadata">Metadata</button>
+                        <button class="tab" data-tab="subscribe">Subscribe</button>
                     </div>
 
-                    <!-- 内容标签页 -->
+                    <!-- Content tab -->
                     <div id="tab-content" class="tab-content active">
                         <div class="editor-toolbar">
-                            <button id="btn-read">读取</button>
-                            <button id="btn-write">写入</button>
-                            <button id="btn-append">追加</button>
-                            <button id="btn-undo">撤销</button>
+                            <button id="btn-read">Read</button>
+                            <button id="btn-write">Write</button>
+                            <button id="btn-append">Append</button>
+                            <button id="btn-undo">Undo</button>
                         </div>
                         <div class="search-bar">
-                            <input type="text" id="search-input" placeholder="搜索内容...">
-                            <button id="btn-search">搜索</button>
+                            <input type="text" id="search-input" placeholder="Search content...">
+                            <button id="btn-search">Search</button>
                             <label>
-                                <input type="checkbox" id="regex-mode"> 正则
+                                <input type="checkbox" id="regex-mode"> Regex
                             </label>
                         </div>
-                        <textarea id="editor" placeholder="流内容将显示在这里..."></textarea>
+                        <textarea id="editor" placeholder="Stream content will appear here..."></textarea>
                         <div id="search-results"></div>
                     </div>
 
-                    <!-- 元数据标签页 -->
+                    <!-- Metadata tab -->
                     <div id="tab-metadata" class="tab-content">
                         <div class="metadata-form">
                             <label>
-                                描述:
+                                Description:
                                 <input type="text" id="meta-description">
-                                <button id="btn-update-desc">更新</button>
+                                <button id="btn-update-desc">Update</button>
                             </label>
                             <div class="tags-section">
-                                <h4>标签</h4>
+                                <h4>Tags</h4>
                                 <div id="tags-list"></div>
                                 <div class="tag-input">
-                                    <input type="text" id="tag-key" placeholder="键">
-                                    <input type="text" id="tag-value" placeholder="值">
-                                    <button id="btn-add-tag">添加</button>
+                                    <input type="text" id="tag-key" placeholder="Key">
+                                    <input type="text" id="tag-value" placeholder="Value">
+                                    <button id="btn-add-tag">Add</button>
                                 </div>
                             </div>
                             <label>
-                                重命名:
+                                Rename:
                                 <input type="text" id="new-name">
-                                <button id="btn-rename">重命名</button>
+                                <button id="btn-rename">Rename</button>
                             </label>
                         </div>
                     </div>
 
-                    <!-- 订阅标签页 -->
+                    <!-- Subscribe tab -->
                     <div id="tab-subscribe" class="tab-content">
                         <div class="subscribe-controls">
                             <label>
-                                起始位置:
+                                Start position:
                                 <input type="number" id="from-position" placeholder="0">
                             </label>
-                            <button id="btn-subscribe">订阅</button>
-                            <button id="btn-unsubscribe" disabled>取消订阅</button>
+                            <button id="btn-subscribe">Subscribe</button>
+                            <button id="btn-unsubscribe" disabled>Unsubscribe</button>
                         </div>
                         <div id="notifications-log">
-                            <h4>变更通知</h4>
+                            <h4>Change Notifications</h4>
                             <div id="notifications-list"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 空状态 -->
+                <!-- Empty state -->
                 <div id="empty-state">
-                    <p>选择一个流或创建新流开始</p>
+                    <p>Select a stream or create a new one to start</p>
                 </div>
             </section>
         </main>
 
-        <!-- 底部状态栏 -->
+        <!-- Footer status bar -->
         <footer id="footer">
-            <span id="status-connection">未连接</span>
-            <span id="status-subscriptions">订阅: 0</span>
-            <span id="status-streams">流: 0</span>
-            <span id="status-last-op">最后操作: -</span>
+            <span id="status-connection">Disconnected</span>
+            <span id="status-subscriptions">Subscriptions: 0</span>
+            <span id="status-streams">Streams: 0</span>
+            <span id="status-last-op">Last operation: -</span>
         </footer>
     </div>
 
-    <!-- 追加内容模态对话框 -->
+    <!-- Append content modal dialog -->
     <div id="append-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>追加内容</h3>
+                <h3>Append Content</h3>
                 <button class="modal-close" id="append-modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                <textarea id="append-textarea" placeholder="请输入要追加的内容（支持多行）..." rows="10"></textarea>
+                <textarea id="append-textarea" placeholder="Enter content to append (multiline supported)..." rows="10"></textarea>
             </div>
             <div class="modal-footer">
-                <button id="append-modal-cancel" class="btn-secondary">取消</button>
-                <button id="append-modal-confirm" class="btn-primary">追加</button>
+                <button id="append-modal-cancel" class="btn-secondary">Cancel</button>
+                <button id="append-modal-confirm" class="btn-primary">Append</button>
             </div>
         </div>
     </div>

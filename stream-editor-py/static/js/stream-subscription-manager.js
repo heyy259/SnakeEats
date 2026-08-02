@@ -1,7 +1,7 @@
 /**
- * 流订阅管理器
+ * Stream subscription manager
  * 
- * 管理到 Flask 后端的 WebSocket 连接，处理流订阅和通知。
+ * Manages the WebSocket connection to the Flask backend, handling stream subscriptions and notifications.
  */
 class StreamSubscriptionManager {
     constructor() {
@@ -17,9 +17,9 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 连接到 Flask 后端的 WebSocket 端点
-     * @param {number} port - Flask 服务器端口
-     * @param {string} systemId - 系统 ID
+     * Connect to the WebSocket endpoint of the Flask backend
+     * @param {number} port - Flask server port
+     * @param {string} systemId - system ID
      */
     connect(port, systemId) {
         this.port = port;
@@ -33,13 +33,13 @@ class StreamSubscriptionManager {
         const wsPort = window.WEBSOCKET_PORT || (port + 1000);
         const url = `ws://localhost:${wsPort}`;
         
-        console.log(`连接到 WebSocket 服务器: ${url}`);
+        console.log(`Connecting to WebSocket server: ${url}`);
         
         try {
             this.ws = new WebSocket(url);
 
             this.ws.onopen = () => {
-                console.log('WebSocket 连接已建立');
+                console.log('WebSocket connection established');
                 this._connected = true;
                 this.reconnectAttempts = 0;
                 this.resubscribeAll();
@@ -51,76 +51,76 @@ class StreamSubscriptionManager {
                     const data = JSON.parse(event.data);
                     this.handleMessage(data);
                 } catch (e) {
-                    console.error('解析消息失败:', e);
+                    console.error('Failed to parse message:', e);
                 }
             };
 
             this.ws.onclose = (event) => {
-                console.log('WebSocket 连接关闭:', event.code, event.reason);
+                console.log('WebSocket connection closed:', event.code, event.reason);
                 this._connected = false;
                 this.scheduleReconnect();
             };
 
             this.ws.onerror = (error) => {
-                console.error('WebSocket 错误:', error);
+                console.error('WebSocket error:', error);
             };
         } catch (e) {
-            console.error('创建 WebSocket 连接失败:', e);
+            console.error('Failed to create WebSocket connection:', e);
             this.scheduleReconnect();
         }
     }
 
     /**
-     * 处理接收到的消息
-     * @param {Object} data - 消息数据
+     * Handle an incoming message
+     * @param {Object} data - message data
      */
     handleMessage(data) {
         switch (data.type) {
             case 'connected':
-                console.log('WebSocket 连接成功，客户端 ID:', data.client_id);
+                console.log('WebSocket connected, client ID:', data.client_id);
                 break;
             case 'stream.on_change':
                 this.handleStreamChange(data);
                 break;
             case 'subscribed':
-                console.log(`订阅成功: ${data.stream_name} -> ${data.subscription_id}`);
+                console.log(`Subscribed: ${data.stream_name} -> ${data.subscription_id}`);
                 this.subscriptions.set(data.stream_name, data.subscription_id);
                 break;
             case 'unsubscribed':
-                console.log(`取消订阅成功: ${data.stream_name}`);
+                console.log(`Unsubscribed: ${data.stream_name}`);
                 this.subscriptions.delete(data.stream_name);
                 break;
             case 'subscriptions':
-                console.log('当前订阅列表:', data.subscriptions);
+                console.log('Current subscription list:', data.subscriptions);
                 break;
             case 'error':
-                console.error('订阅错误:', data.message);
+                console.error('Subscription error:', data.message);
                 break;
             case 'tool.on_registry_change':
-                // 工具注册/注销 → 自动刷新工具列表
+                // Tool registered/unregistered → automatically refresh the tool list
                 console.log('[Notification] Tool registry changed:', data.change);
                 state.emit('toolRegistryChanged', data.change);
                 break;
             case 'tool.on_process':
-                // 后台进程生命周期（启动/退出）→ 独立通道
+                // Background process lifecycle (started/exited) → dedicated channel
                 console.log('[Notification] Process event:', data.change?.type, data.change?.process_name);
                 this._handleProcessEvent(data);
                 break;
             case 'scan.on_change':
-                // 扫描事件 → 分发到具体处理器
+                // Scan events → dispatch to the specific handler
                 console.log('[Notification] Scan event:', data.change?.type, data.stream_name);
                 this._handleScanEvent(data);
                 break;
             default:
-                console.warn('未知消息类型:', data.type);
+                console.warn('Unknown message type:', data.type);
         }
     }
 
     /**
-     * 订阅流
-     * @param {string} systemId - 系统 ID
-     * @param {string} streamName - 流名称
-     * @param {Function} callback - 变化回调函数
+     * Subscribe to a stream
+     * @param {string} systemId - system ID
+     * @param {string} streamName - stream name
+     * @param {Function} callback - change callback function
      */
     subscribe(systemId, streamName, callback) {
         this.callbacks.set(streamName, callback);
@@ -133,14 +133,14 @@ class StreamSubscriptionManager {
                 stream_name: streamName
             }));
         } else {
-            console.warn('WebSocket 未连接，将在连接后订阅');
+            console.warn('WebSocket not connected, will subscribe after connecting');
         }
     }
 
     /**
-     * 取消订阅流
-     * @param {string} systemId - 系统 ID
-     * @param {string} streamName - 流名称
+     * Unsubscribe from a stream
+     * @param {string} systemId - system ID
+     * @param {string} streamName - stream name
      */
     unsubscribe(systemId, streamName) {
         this.callbacks.delete(streamName);
@@ -155,8 +155,8 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 处理流变化通知
-     * @param {Object} data - 变化数据
+     * Handle a stream change notification
+     * @param {Object} data - change data
      */
     handleStreamChange(data) {
         const callback = this.callbacks.get(data.stream_name);
@@ -164,13 +164,13 @@ class StreamSubscriptionManager {
             try {
                 callback(data);
             } catch (e) {
-                console.error('执行回调失败:', e);
+                console.error('Callback execution failed:', e);
             }
         }
     }
 
     /**
-     * 处理扫描事件通知
+     * Handle a scan event notification
      * @param {Object} data - { type, stream_name, change }
      */
     _handleScanEvent(data) {
@@ -179,9 +179,9 @@ class StreamSubscriptionManager {
 
         switch (change.type) {
             case 'state':
-                // 扫描状态变更 (idle/scanning/paused)
-                // 注意：使用 'scanWSStateChange' 而非 'scanStateChanged'，
-                // 避免与 state.setScanState() 的事件冲突导致无限递归
+                // Scan state change (idle/scanning/paused)
+                // Note: use 'scanWSStateChange' instead of 'scanStateChanged',
+                // to avoid conflicting with state.setScanState() events and causing infinite recursion
                 state.emit('scanWSStateChange', {
                     status: change.new_state,
                     oldStatus: change.old_state,
@@ -189,7 +189,7 @@ class StreamSubscriptionManager {
                 break;
 
             case 'position':
-                // 位置更新 (300ms 节流，替代轮询)
+                // Position update (300ms throttled, replaces polling)
                 state.emit('scanPositionUpdated', {
                     position: change.position,
                 });
@@ -204,12 +204,12 @@ class StreamSubscriptionManager {
                 break;
 
             case 'scan_complete':
-                // 扫描完成
+                // Scan complete
                 state.emit('scanCompleted', change);
                 break;
 
             case 'error':
-                // 扫描错误
+                // Scan error
                 state.emit('scanError', change);
                 break;
 
@@ -235,14 +235,14 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 重新订阅所有流（用于重连后）
+     * Re-subscribe to all streams (used after reconnecting)
      */
     resubscribeAll() {
         if (!this.systemId) {
             return;
         }
 
-        console.log(`重新订阅 ${this.callbacks.size} 个流`);
+        console.log(`Re-subscribing to ${this.callbacks.size} stream(s)`);
         
         for (const [streamName, callback] of this.callbacks) {
             this.subscribe(this.systemId, streamName, callback);
@@ -250,14 +250,14 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 计划重连
+     * Schedule a reconnect
      */
     scheduleReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
             
-            console.log(`${delay}ms 后重连 (尝试 ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+            console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             
             setTimeout(() => {
                 if (this.port && this.systemId) {
@@ -265,12 +265,12 @@ class StreamSubscriptionManager {
                 }
             }, delay);
         } else {
-            console.error('达到最大重连次数，停止重连');
+            console.error('Maximum reconnect attempts reached, stopping reconnection');
         }
     }
 
     /**
-     * 断开连接
+     * Disconnect
      */
     disconnect() {
         // Prevent pending reconnect timers from firing after disconnect
@@ -288,7 +288,7 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 列出当前订阅
+     * List the current subscriptions
      */
     listSubscriptions() {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -299,7 +299,7 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 是否已连接
+     * Whether the connection is established
      * @returns {boolean}
      */
     isConnected() {
@@ -307,7 +307,7 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 获取订阅数量
+     * Get the subscription count
      * @returns {number}
      */
     getSubscriptionCount() {
@@ -315,7 +315,7 @@ class StreamSubscriptionManager {
     }
 
     /**
-     * 获取所有订阅的流名称
+     * Get the names of all subscribed streams
      * @returns {string[]}
      */
     getSubscribedStreams() {
@@ -323,5 +323,5 @@ class StreamSubscriptionManager {
     }
 }
 
-// 导出（全局）
+// Export (global)
 window.StreamSubscriptionManager = StreamSubscriptionManager;

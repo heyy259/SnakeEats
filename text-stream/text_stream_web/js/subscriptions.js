@@ -4,7 +4,7 @@ class SubscriptionManager {
         this.subscriptions = new Map(); // subscriptionId -> { streamName, fromPosition }
         this.notificationCallbacks = [];
 
-        // 注册通知处理
+        // Register notification handler
         this.wsClient.onNotification((notification) => {
             if (notification.method === 'stream.on_change') {
                 this.handleNotification(notification.params);
@@ -12,7 +12,7 @@ class SubscriptionManager {
         });
     }
 
-    // 订阅流
+    // Subscribe to a stream
     async subscribe(streamName, fromPosition = null) {
         const params = { name: streamName };
         if (fromPosition !== null) {
@@ -32,21 +32,21 @@ class SubscriptionManager {
         return subscriptionId;
     }
 
-    // 取消订阅
+    // Unsubscribe
     async unsubscribe(subscriptionId) {
         await this.wsClient.send('stream.unsubscribe', { subscription_id: subscriptionId });
         this.subscriptions.delete(subscriptionId);
     }
 
-    // 处理通知
+    // Handle notification
     handleNotification(params) {
         const { subscription_id, name, change, new_size } = params;
 
-        // 更新订阅信息
+        // Update subscription info
         if (this.subscriptions.has(subscription_id)) {
             const sub = this.subscriptions.get(subscription_id);
 
-            // 如果是 rename 事件，更新本地 streamName
+            // If it is a rename event, update the local streamName
             if (change && change.type === 'rename') {
                 sub.streamName = change.new_name;
             }
@@ -58,7 +58,7 @@ class SubscriptionManager {
             };
         }
 
-        // 触发回调
+        // Trigger callbacks
         this.notificationCallbacks.forEach(cb => cb({
             subscriptionId: subscription_id,
             streamName: name,
@@ -68,7 +68,7 @@ class SubscriptionManager {
         }));
     }
 
-    // 获取活跃订阅
+    // Get active subscriptions
     getActiveSubscriptions() {
         return Array.from(this.subscriptions.entries()).map(([id, sub]) => ({
             id,
@@ -76,7 +76,7 @@ class SubscriptionManager {
         }));
     }
 
-    // 检查某流是否已订阅
+    // Check whether a stream is subscribed
     isSubscribed(streamName) {
         for (const sub of this.subscriptions.values()) {
             if (sub.streamName === streamName) return true;
@@ -84,7 +84,7 @@ class SubscriptionManager {
         return false;
     }
 
-    // 获取某流的订阅ID
+    // Get the subscription ID of a stream
     getSubscriptionId(streamName) {
         for (const [id, sub] of this.subscriptions.entries()) {
             if (sub.streamName === streamName) return id;
@@ -92,7 +92,7 @@ class SubscriptionManager {
         return null;
     }
 
-    // 清空所有订阅
+    // Clear all subscriptions
     async clearAll() {
         const promises = [];
         this.subscriptions.forEach((sub, id) => {
@@ -101,11 +101,11 @@ class SubscriptionManager {
         await Promise.all(promises);
     }
 
-    // 注册通知回调
+    // Register notification callback
     onNotification(callback) {
         this.notificationCallbacks.push(callback);
     }
 }
 
-// 导出（全局）
+// Export (global)
 window.SubscriptionManager = SubscriptionManager;

@@ -15,13 +15,13 @@ class TabManager {
     }
 
     setupAutoSave() {
-        // 用户停止编辑 5 秒后自动保存（debounce 模式）
+        // Auto-save 5 seconds after the user stops editing (debounce mode)
         state.on('tabModified', ({ tabId, modified }) => {
             if (!modified) return;
             this._resetAutoSaveTimer(tabId);
         });
 
-        // 切换 tab 时也重置（用户可能切 tab 后立即开始编辑）
+        // Also reset when switching tabs (the user may start editing right after)
         state.on('activeTabChanged', (tabId) => {
             if (tabId) this._resetAutoSaveTimer(tabId);
         });
@@ -77,7 +77,7 @@ class TabManager {
         state.on('activeTabChanged', () => this.renderTabs());
         state.on('tabModified', () => this.renderTabs());
         state.on('scanPositionForTab', (data) => this._updateTabScanPosition(data));
-        // 扫描停止时清除所有tab上的扫描指示器
+        // Clear scan indicators on all tabs when scanning stops
         state.on('scanStateChanged', (scanState) => {
             if (!scanState || (scanState.status || '').toLowerCase() === 'idle') {
                 this._clearAllScanIndicators();
@@ -271,7 +271,7 @@ class TabManager {
         document.getElementById('btn-save').disabled = !activeTab;
         document.getElementById('btn-save-as').disabled = !activeTab;
 
-        // 重渲染后恢复扫描位置显示
+        // Restore scan position display after re-render
         if (state.scanState && state.scanState.status !== 'idle') {
             const scannedTabId = `${state.scanState.systemId}:${state.scanState.streamName}`;
             const text = state.getEditorState(scannedTabId)?.content || '';
@@ -279,7 +279,7 @@ class TabManager {
             const { row, col } = charOffsetToRowCol(pos, text);
             this._updateTabScanPosition({ row, col, tabId: scannedTabId });
 
-            // 如果扫描目标tab恰好是激活tab，恢复编辑器中的标记
+            // If the scanned tab happens to be the active tab, restore the marker in the editor
             if (scannedTabId === state.activeTabId && typeof markdownEditor !== 'undefined') {
                 setTimeout(() => {
                     if (state.scanState && state.scanState.status !== 'idle') {
@@ -308,7 +308,7 @@ class TabManager {
         }
         posEl.textContent = `Ln ${row}, Col ${col}`;
 
-        // 扫描指示小箭头 — 让非激活tab也能看出扫描在进行
+        // Small scan indicator arrow — lets inactive tabs also show that scanning is in progress
         let indicatorEl = tabEl.querySelector('.tab-scan-indicator');
         if (!indicatorEl) {
             indicatorEl = document.createElement('span');
@@ -353,18 +353,18 @@ class TabManager {
                 state.updateEditorState(tabId, { content: result.data.content });
                 this.updateEditor();
             } else {
-                state.setError(`无法打开流 "${streamName}": ${result.error || '未知错误'}`);
+                state.setError(`Failed to open stream "${streamName}": ${result.error || 'Unknown error'}`);
             }
         } catch (err) {
-            state.setError(`无法连接系统，流 "${streamName}" 可能不可用`);
+            state.setError(`Cannot connect to the system; stream "${streamName}" may be unavailable`);
         }
     }
 
     handleStreamChange(streamName, change) {
-        // change 来自 subscription_manager.notify_clients 的通知:
-        //   新格式: {type:'stream.on_change', system_id, stream_name, change: {type, position, text, ...}}
-        //   旧格式: change 字段内还有一层 text-stream params 包装 {name, subscription_id, change: {...}, new_size}
-        // 兼容两种: 如果 change.change 是 {type, ...} 就直接用，否则尝试再解一层
+        // change comes from subscription_manager.notify_clients notifications:
+        //   New format: {type:'stream.on_change', system_id, stream_name, change: {type, position, text, ...}}
+        //   Old format: change wraps another text-stream params layer {name, subscription_id, change: {...}, new_size}
+        // Compatible with both: if change.change is {type, ...}, use it directly; otherwise try unwrapping one more layer
         const inner = change.change || {};
         const actualChange = (inner.type !== undefined) ? inner : (inner.change || {});
         const changeType = actualChange.type;
@@ -393,10 +393,10 @@ class TabManager {
             case 'rename':
                 this.updateStreamName(streamName, actualChange.new_name);
                 break;
-            // stream.delete (删除整个流) 不触发 stream.on_change 通知，
-            // 所以 'delete' 类型永远指向 delete_range 内容操作，不是流删除。
+            // stream.delete (deleting the entire stream) does not trigger a stream.on_change notification,
+            // so the 'delete' type always refers to a delete_range content operation, not stream deletion.
             default:
-                console.log('未知变化类型:', changeType, '原始数据:', change);
+                console.log('Unknown change type:', changeType, 'raw data:', change);
         }
     }
 
@@ -415,7 +415,7 @@ class TabManager {
                 }
                 
                 if (state.activeTabId === tabId && typeof markdownEditor !== 'undefined') {
-                    // 内容未变 → 跳过，不动 DOM / 光标（自通知场景）
+                    // Content unchanged → skip, do not touch DOM / cursor (self-notification scenario)
                     if (markdownEditor.getContent() === result.data.content) {
                         return;
                     }
@@ -423,12 +423,12 @@ class TabManager {
                 }
             }
         } catch (e) {
-            console.error('更新编辑器内容失败:', e);
+            console.error('Failed to update editor content:', e);
         }
     }
 
     async updateStreamMetadata(streamName) {
-        console.log('流元数据已更新:', streamName);
+        console.log('Stream metadata updated:', streamName);
         await this.loadStreams();
     }
 
@@ -447,7 +447,7 @@ class TabManager {
                 this.subscriptionManager.callbacks.set(newName, callback);
             }
             
-            // 更新状态
+            // Update state
             state.emit('tabsChanged', state.tabs);
         }
     }
@@ -463,7 +463,7 @@ class TabManager {
             if (!confirm('This stream has unsaved changes. Close anyway?')) return;
         }
 
-        // 取消订阅
+        // Unsubscribe
         if (tab) {
             this.subscriptionManager.unsubscribe(tab.systemId, tab.streamName);
         }
@@ -538,14 +538,14 @@ class TabManager {
                 state.setError(result.error || 'Failed to create stream');
             }
         } catch (err) {
-            state.setError('创建流失败: 系统连接超时，请检查系统是否正常运行');
+            state.setError('Failed to create stream: system connection timed out, please check that the system is running');
         } finally {
             this.hideCreateDialog();
         }
     }
 
     async deleteStream(streamName) {
-        if (!confirm(`确定删除流 "${streamName}" 吗？此操作不可恢复。`)) return;
+        if (!confirm(`Are you sure you want to delete stream "${streamName}"? This action cannot be undone.`)) return;
 
         state.setLoading(true);
         try {
@@ -566,7 +566,7 @@ class TabManager {
     }
 
     async renameStream(oldName) {
-        const newName = prompt(`重命名流 "${oldName}":`, oldName);
+        const newName = prompt(`Rename stream "${oldName}":`, oldName);
         if (!newName || newName === oldName) return;
 
         state.setLoading(true);
@@ -609,23 +609,23 @@ class TabManager {
         const stream = streams.find(s => s.name === streamName);
         if (!stream) return;
 
-        // 创建元数据编辑对话框
+        // Create the metadata editor dialog
         const dialog = document.createElement('div');
         dialog.className = 'dialog-overlay';
         dialog.id = 'metadata-editor-dialog';
         dialog.innerHTML = `
             <div class="dialog">
                 <div class="dialog-header">
-                    <h2>编辑流元数据 - ${streamName}</h2>
+                    <h2>Edit Stream Metadata - ${streamName}</h2>
                     <button class="dialog-close" id="close-metadata-editor">×</button>
                 </div>
                 <div class="dialog-content">
                     <div class="form-group">
-                        <label for="metadata-description">描述</label>
-                        <textarea id="metadata-description" rows="3" placeholder="流描述">${stream.description || ''}</textarea>
+                        <label for="metadata-description">Description</label>
+                        <textarea id="metadata-description" rows="3" placeholder="Stream description">${stream.description || ''}</textarea>
                     </div>
                     <div class="form-group">
-                        <label>标签</label>
+                        <label>Tags</label>
                         <div id="metadata-tags-list" class="metadata-tags-list">
                             ${Object.entries(stream.tags).map(([key, val]) => `
                                 <div class="metadata-tag-item" data-key="${key}">
@@ -637,24 +637,24 @@ class TabManager {
                         <div class="add-tag-form">
                             <input type="text" id="new-tag-key" placeholder="Key" class="tag-input">
                             <input type="text" id="new-tag-value" placeholder="Value" class="tag-input">
-                            <button class="btn btn-sm btn-primary" id="add-tag-btn">添加</button>
+                            <button class="btn btn-sm btn-primary" id="add-tag-btn">Add</button>
                         </div>
                     </div>
                 </div>
                 <div class="dialog-footer">
-                    <button class="btn btn-secondary" id="cancel-metadata-editor">取消</button>
-                    <button class="btn btn-primary" id="save-metadata-editor">保存</button>
+                    <button class="btn btn-secondary" id="cancel-metadata-editor">Cancel</button>
+                    <button class="btn btn-primary" id="save-metadata-editor">Save</button>
                 </div>
             </div>
         `;
 
         document.body.appendChild(dialog);
 
-        // 绑定事件
+        // Bind events
         document.getElementById('close-metadata-editor').addEventListener('click', () => dialog.remove());
         document.getElementById('cancel-metadata-editor').addEventListener('click', () => dialog.remove());
 
-        // 添加标签
+        // Add tag
         document.getElementById('add-tag-btn').addEventListener('click', async () => {
             const key = document.getElementById('new-tag-key').value.trim();
             const value = document.getElementById('new-tag-value').value.trim();
@@ -662,7 +662,7 @@ class TabManager {
 
             const result = await api.setStreamTag(state.activeSystemId, streamName, key, value);
             if (result.success) {
-                // 添加到列表
+                // Add to the list
                 const tagsList = document.getElementById('metadata-tags-list');
                 const tagItem = document.createElement('div');
                 tagItem.className = 'metadata-tag-item';
@@ -673,12 +673,12 @@ class TabManager {
                 `;
                 tagsList.appendChild(tagItem);
 
-                // 绑定删除事件
+                // Bind delete event
                 tagItem.querySelector('.remove-tag-btn').addEventListener('click', async () => {
                     await this.removeTag(streamName, key, tagItem);
                 });
 
-                // 清空输入
+                // Clear inputs
                 document.getElementById('new-tag-key').value = '';
                 document.getElementById('new-tag-value').value = '';
             } else {
@@ -686,7 +686,7 @@ class TabManager {
             }
         });
 
-        // 删除标签
+        // Delete tag
         dialog.querySelectorAll('.remove-tag-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const key = btn.dataset.key;
@@ -695,7 +695,7 @@ class TabManager {
             });
         });
 
-        // 保存描述
+        // Save description
         document.getElementById('save-metadata-editor').addEventListener('click', async () => {
             const description = document.getElementById('metadata-description').value;
             const result = await api.updateStreamDescription(state.activeSystemId, streamName, description);
