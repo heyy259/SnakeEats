@@ -27,6 +27,7 @@ flask_port = None  # Flask port allocated by PortManager
 tool_registry_launcher = None  # tool-registry launcher 实例
 scan_bridge_service = None
 tool_integration = None  # ToolIntegration 门面实例 (重构新增)
+tool_config_service = None  # ToolConfigService 实例 (工具配置保存/加载)
 system_manager: Optional[SystemServiceManager] = None
 file_history: Optional[FileHistoryManager] = None
 _services_loop = None  # Keep event loop alive for services
@@ -48,7 +49,7 @@ def _update_service_status(key: str, **kwargs):
 
 def start_services(pid_manager=None):
     """Start core services only. text-stream must be started manually by user."""
-    global port_manager, _services_loop, system_manager, flask_port, file_history
+    global port_manager, _services_loop, system_manager, flask_port, file_history, tool_config_service
     
     from port_manager import PortManager, PortManagerConfig
     
@@ -147,6 +148,8 @@ def start_services(pid_manager=None):
                 services_status[key] = info
 
             tool_integration = ToolIntegration(tool_registry_launcher.sdk)
+            from services.tool_config_service import ToolConfigService
+            tool_config_service = ToolConfigService(tool_integration)
             scan_bridge_service = ScanBridgeService(
                 system_manager=system_manager,
                 tool_integration=tool_integration,
@@ -285,6 +288,12 @@ def _get_tool_integration():
         print("[DEBUG] tool_integration not initialized — tool-registry SDK unavailable")
         return None
     return tool_integration
+
+
+def _get_tool_config_service():
+    """Get the global ToolConfigService instance. Returns None if unavailable."""
+    global tool_config_service
+    return tool_config_service
 
 
 # ============================================
@@ -1014,6 +1023,91 @@ def stop_all_background_processes():
         return jsonify({'success': True, 'data': result})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── 工具配置保存/加载（复用 tool_registry.file_io）────────────────────
+
+def _default_config_filename() -> str:
+    from datetime import datetime
+    return f"tools_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+
+@app.route('/api/tools/config/export', methods=['POST'])
+def export_tools_config():
+    """导出工具配置到 JSON 文件（支持多选子集）
+
+    请求体:
+        output_dir:  输出目录（绝对路径，前端经 pickDirectory 获取）
+        file_name:   文件名（可选，默认 tools_config_<时间戳>.json）
+        tool_names:  工具子集（可选，默认全部导出）
+        overwrite:   是否覆盖已存在文件（默认 true）
+
+    返回:
+        config_path: 配置文件绝对路径
+        tool_count:  导出的工具数
+    """
+    svc = _get_tool_config_service()
+    if svc is None:
+        return jsonify({'success': False, 'error': 'tool-registry not available'}), 503
+    data = request.json or {}
+    output_dir = data.get('output_dir')
+    if not output_dir or not os.path.isabs(output_dir):
+        return jsonify({'success': False, 'error': 'output_dir (absolute) is required'}), 400
+
+    file_name = data.get('file_name') or _default_config_filename()
+    result = svc.export(
+        os.path.join(output_dir, file_name),
+        tool_names=data.get('tool_names'),
+        overwrite=data.get('overwrite', True),
+    )
+    if not result['success']:
+        return jsonify(result), 400
+    return jsonify({'success': True, 'data': result['data']})
+
+
+@app.route('/api/tools/config/preview', methods=['POST'])
+def preview_tools_config():
+    """导入前预览：返回配置文件中的工具数/名称/冲突（不改注册表）"""
+    svc = _get_tool_config_service()
+    if svc is None:
+        return jsonify({'success': False, 'error': 'tool-registry not available'}), 503
+    data = request.json or {}
+    config_path = data.get('config_path')
+    if not config_path:
+        return jsonify({'success': False, 'error': 'config_path is required'}), 400
+    result = svc.preview(config_path)
+    if not result['success']:
+        return jsonify(result), 400
+    return jsonify({'success': True, 'data': result['data']})
+
+
+@app.route('/api/tools/config/import', methods=['POST'])
+def import_tools_config():
+    """从 JSON 配置文件导入工具（逐工具合并，不清空现有注册表）
+
+    请求体:
+        config_path:  配置文件绝对路径（前端经 pickFile 获取）
+        on_conflict:  "skip" | "overwrite"（默认 "skip"）
+
+    返回:
+        loaded / skipped / overwritten / errors 列表
+    """
+    svc = _get_tool_config_service()
+    if svc is None:
+        return jsonify({'success': False, 'error': 'tool-registry not available'}), 503
+    data = request.json or {}
+    config_path = data.get('config_path')
+    if not config_path:
+        return jsonify({'success': False, 'error': 'config_path is required'}), 400
+
+    on_conflict = data.get('on_conflict', 'skip')
+    if on_conflict not in ('skip', 'overwrite'):
+        return jsonify({'success': False, 'error': f'Invalid on_conflict: {on_conflict}'}), 400
+
+    result = svc.import_config(config_path, on_conflict=on_conflict)
+    if not result['success']:
+        return jsonify(result), 400
+    return jsonify({'success': True, 'data': result['data']})
 
 
 # ═══════════════════════════════════════════════════════════════════

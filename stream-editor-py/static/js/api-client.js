@@ -169,6 +169,18 @@ class ApiClient {
     async deleteFileHistory(entryId) {
         return this.request('DELETE', `/api/files/history/${entryId}`);
     }
+
+    async saveToolsConfig(data) {
+        return this.request('POST', '/api/tools/config/export', data);
+    }
+
+    async previewToolsConfig(configPath) {
+        return this.request('POST', '/api/tools/config/preview', { config_path: configPath });
+    }
+
+    async loadToolsConfig(data) {
+        return this.request('POST', '/api/tools/config/import', data);
+    }
 }
 
 const api = new ApiClient();

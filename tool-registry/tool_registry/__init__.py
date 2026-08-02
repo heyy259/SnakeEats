@@ -14,6 +14,7 @@ from .exceptions import (
     ToolExecutionError,
     InvalidToolCallFormatError,
     ScannerStateError,
+    ToolConflictError,
 )
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "ToolExecutionError",
     "InvalidToolCallFormatError",
     "ScannerStateError",
+    "ToolConflictError",
 ]

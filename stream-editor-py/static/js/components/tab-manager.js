@@ -4,7 +4,8 @@ class TabManager {
         this.streamList = document.getElementById('stream-list');
         this.createDialog = document.getElementById('create-stream-dialog');
         this._pollingPaused = false;
-        this._autoSaveInterval = null;
+        this._autoSaveTimer = null;
+        this._autoSaveDelay = 5000;
         this._autoSaveEnabled = true;
 
         this.subscriptionManager = new StreamSubscriptionManager();
@@ -14,9 +15,25 @@ class TabManager {
     }
 
     setupAutoSave() {
-        this._autoSaveInterval = setInterval(() => {
+        // 用户停止编辑 5 秒后自动保存（debounce 模式）
+        state.on('tabModified', ({ tabId, modified }) => {
+            if (!modified) return;
+            this._resetAutoSaveTimer(tabId);
+        });
+
+        // 切换 tab 时也重置（用户可能切 tab 后立即开始编辑）
+        state.on('activeTabChanged', (tabId) => {
+            if (tabId) this._resetAutoSaveTimer(tabId);
+        });
+    }
+
+    _resetAutoSaveTimer(tabId) {
+        if (this._autoSaveTimer) {
+            clearTimeout(this._autoSaveTimer);
+        }
+        this._autoSaveTimer = setTimeout(() => {
             this._doAutoSave();
-        }, 5000);
+        }, this._autoSaveDelay);
     }
 
     async _doAutoSave() {

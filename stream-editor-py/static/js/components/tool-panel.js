@@ -29,6 +29,8 @@ class ToolPanel {
         document.getElementById('edit-add-tag-row').addEventListener('click', () => this.addEditTagRow());
 
         document.getElementById('btn-register-tool').addEventListener('click', () => this.showRegisterDialog());
+        document.getElementById('btn-save-tools-config').addEventListener('click', () => this.saveToolsConfig());
+        document.getElementById('btn-load-tools-config').addEventListener('click', () => this.loadToolsConfig());
         document.getElementById('close-tool-register').addEventListener('click', () => this.hideRegisterDialog());
         document.getElementById('cancel-tool-register').addEventListener('click', () => this.hideRegisterDialog());
         document.getElementById('submit-tool-register').addEventListener('click', () => this.registerTool());
@@ -726,6 +728,162 @@ class ToolPanel {
 
     showToast(message, type = 'info') {
         window.showToast(message, type, 3000);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  Save / Load Tool Config
+    // ═══════════════════════════════════════════════════════════════
+
+    async saveToolsConfig() {
+        if (state.tools.length === 0) {
+            this.showToast('No tools to save', 'warning');
+            return;
+        }
+        this._showSaveToolsDialog(state.tools);
+    }
+
+    _showSaveToolsDialog(tools) {
+        const dialog = document.getElementById('save-tools-dialog');
+        const listEl = document.getElementById('save-tools-list');
+        const selectAllCheckbox = document.getElementById('save-tools-select-all');
+        const countEl = document.getElementById('save-tools-count');
+        const confirmBtn = document.getElementById('btn-confirm-save-tools');
+        const dirInput = document.getElementById('save-tools-dir-input');
+
+        listEl.innerHTML = tools.map(t => `
+            <label class="save-streams-item">
+                <input type="checkbox" class="save-tools-checkbox" value="${this.escapeHtml(t.name)}" checked>
+                <div class="save-streams-item-info">
+                    <div class="save-streams-item-name">${this.escapeHtml(t.name)}</div>
+                    <div class="save-streams-item-meta">${this.getCompactTags(t.tags)}</div>
+                </div>
+            </label>
+        `).join('');
+
+        const updateCount = () => {
+            const checked = listEl.querySelectorAll('.save-tools-checkbox:checked');
+            countEl.textContent = `${checked.length} selected`;
+            confirmBtn.disabled = checked.length === 0 || !dirInput.value;
+        };
+
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.addEventListener('change', () => {
+            listEl.querySelectorAll('.save-tools-checkbox').forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+            });
+            updateCount();
+        });
+
+        listEl.querySelectorAll('.save-tools-checkbox').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const all = listEl.querySelectorAll('.save-tools-checkbox');
+                const checked = listEl.querySelectorAll('.save-tools-checkbox:checked');
+                selectAllCheckbox.checked = checked.length === all.length;
+                selectAllCheckbox.indeterminate = checked.length > 0 && checked.length < all.length;
+                updateCount();
+            });
+        });
+
+        // Browse → 直接打开系统原生目录选择对话框（与 Save As 的 btn-browse-save-dir 一致），
+        // 不再弹出 "Recent Output Directories" 历史窗口（该窗口会被原生 <dialog> 的 top layer 遮挡而无法使用）。
+        document.getElementById('btn-browse-save-tools-dir').onclick = async () => {
+            const r = await api.selectDirectory();
+            if (r.success && r.data.path) {
+                dirInput.value = r.data.path;
+                updateCount();
+            }
+        };
+
+        document.getElementById('btn-cancel-save-tools').onclick = () => dialog.close();
+        document.getElementById('close-save-tools-dialog').onclick = () => dialog.close();
+
+        confirmBtn.onclick = async () => {
+            const selectedNames = Array.from(
+                listEl.querySelectorAll('.save-tools-checkbox:checked')
+            ).map(cb => cb.value);
+            const outputDir = dirInput.value.trim();
+            if (selectedNames.length === 0 || !outputDir) return;
+
+            const overwrite = document.getElementById('save-tools-overwrite').checked;
+            dialog.close();
+            state.setLoading(true);
+            try {
+                const r = await api.saveToolsConfig({
+                    output_dir: outputDir,
+                    tool_names: selectedNames,
+                    overwrite: overwrite,
+                });
+                if (r.success) {
+                    await api.addFileHistory({ path: outputDir, path_type: 'save_tools_dir', label: outputDir });
+                    this.showToast(`Saved ${r.data.tool_count} tool(s) to ${r.data.config_path}`, 'success');
+                } else {
+                    this.showToast(r.error || 'Save failed', 'error');
+                }
+            } catch (e) {
+                this.showToast('Save failed: ' + e.message, 'error');
+            } finally {
+                state.setLoading(false);
+            }
+        };
+
+        updateCount();
+        dialog.showModal();
+    }
+
+    async loadToolsConfig() {
+        // 直接打开系统原生文件选择对话框（与 file-manager pickFile 的 __browse__ 分支一致），
+        // 不再弹出 "Recent Tool Config Files" 历史窗口。
+        const r = await api.selectFile([["JSON Config", "*.json"], ["All Files", "*.*"]]);
+        if (!r.success || !r.data.path) return;
+        const path = r.data.path;
+
+        state.setLoading(true);
+        let preview;
+        try {
+            preview = await api.previewToolsConfig(path);
+        } finally {
+            state.setLoading(false);
+        }
+        if (!preview.success) {
+            this.showToast(preview.error || 'Invalid config file', 'error');
+            return;
+        }
+
+        const conflictCount = preview.data.conflicts.length;
+        document.getElementById('load-tools-confirm-summary').textContent =
+            `Config contains ${preview.data.tool_count} tool(s)` +
+            (conflictCount > 0
+                ? `, ${conflictCount} with the same name as existing tools`
+                : ', no name conflicts');
+        document.getElementById('load-tools-confirm-dialog').style.display = 'flex';
+
+        document.getElementById('btn-load-tools-confirm').onclick = async () => {
+            document.getElementById('load-tools-confirm-dialog').style.display = 'none';
+            const onConflict = document.querySelector('input[name="load-tools-conflict"]:checked').value;
+            state.setLoading(true);
+            try {
+                const r = await api.loadToolsConfig({ config_path: path, on_conflict: onConflict });
+                if (r.success) {
+                    await api.addFileHistory({ path, path_type: 'load_tools_config', label: path });
+                    const d = r.data;
+                    this.showToast(
+                        `Loaded ${d.loaded.length} · Skipped ${d.skipped.length} · Overwritten ${d.overwritten.length} · Failed ${d.errors.length}`,
+                        d.errors.length > 0 ? 'error' : 'success'
+                    );
+                } else {
+                    this.showToast(r.error || 'Import failed', 'error');
+                }
+            } catch (e) {
+                this.showToast('Import failed: ' + e.message, 'error');
+            } finally {
+                state.setLoading(false);
+            }
+        };
+
+        document.getElementById('btn-load-tools-cancel').onclick = () => {
+            document.getElementById('load-tools-confirm-dialog').style.display = 'none';
+        };
     }
 }
 

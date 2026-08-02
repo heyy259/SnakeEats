@@ -37,6 +37,12 @@ from ._exceptions import (
     InvalidToolCallFormatError,
     ScannerStateError,
 )
+from ._file_io import (
+    FileIOError,
+    ConfigError,
+    ConfigParseError,
+    ConfigValidationError,
+)
 
 __all__ = [
     "SDK",
@@ -49,4 +55,8 @@ __all__ = [
     "ToolExecutionError",
     "InvalidToolCallFormatError",
     "ScannerStateError",
+    "FileIOError",
+    "ConfigError",
+    "ConfigParseError",
+    "ConfigValidationError",
 ]

@@ -187,13 +187,13 @@ class ToolExecutor:
 
     # ── 同步执行 ──────────────────────────────────────────────────────
 
-    def execute(self, tool_name: str, params: dict[str, Any], timeout: float = 30) -> dict[str, Any]:
+    def execute(self, tool_name: str, params: dict[str, Any], timeout: float = 120) -> dict[str, Any]:
         """执行工具（非阻塞模式，支持自动结束）
 
         Args:
             tool_name: 工具名称
             params: 输入参数
-            timeout: 超时时间（秒），默认30秒
+            timeout: 超时时间（秒），默认120秒
 
         Returns:
             执行结果字典:
@@ -460,7 +460,7 @@ class ToolExecutor:
 
     # ── 并行执行 ──────────────────────────────────────────────────────
 
-    def execute_parallel(self, calls: list[tuple[str, dict[str, Any]]], timeout: float = 30) -> list[dict[str, Any]]:
+    def execute_parallel(self, calls: list[tuple[str, dict[str, Any]]], timeout: float = 120) -> list[dict[str, Any]]:
         """并行执行多个工具调用
 
         Args:

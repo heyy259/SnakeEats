@@ -629,6 +629,44 @@ class ToolRegistrySDK:
             "system_id": system_id,
         })
 
+    # ── 文件 I/O ───────────────────────────────────────────────────
+
+    def save(
+        self,
+        output_path: str,
+        tool_names: list[str] | None = None,
+        overwrite: bool = True,
+    ) -> str:
+        """保存注册表到配置文件
+
+        Args:
+            output_path: 输出文件绝对路径
+            tool_names: 要保存的工具名列表，None = 全部
+            overwrite: 是否覆盖已有文件（默认 True）
+
+        Returns:
+            配置文件绝对路径
+        """
+        from ._file_io import save_registry
+        return save_registry(self, output_path, tool_names, overwrite)
+
+    def load_config(
+        self,
+        config_path: str,
+        on_conflict: str = "skip",
+    ) -> dict[str, Any]:
+        """从配置文件加载工具到注册表
+
+        Args:
+            config_path: 配置文件绝对路径
+            on_conflict: 冲突策略 — "skip" | "overwrite" | "error"
+
+        Returns:
+            {"loaded": [...], "skipped": [...], "overwritten": [...], "errors": [...]}
+        """
+        from ._file_io import load_registry
+        return load_registry(self, config_path, on_conflict)
+
     # ── 系统信息 ────────────────────────────────────────────────────
 
     def get_system_info(self) -> dict[str, Any]:

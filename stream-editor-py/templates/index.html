@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Editor - SnakeEats</title>
+    <title>Stream Editor - heyy259</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
@@ -80,6 +80,12 @@
                         <span id="tool-count" class="tool-count">0 / 0</span>
                         <button class="btn btn-sm btn-primary" id="btn-register-tool" title="Register new tool">
                             + Register
+                        </button>
+                        <button class="btn btn-sm btn-secondary" id="btn-save-tools-config" title="Export selected tools to a JSON config file">
+                            💾 Save Config
+                        </button>
+                        <button class="btn btn-sm btn-secondary" id="btn-load-tools-config" title="Import tools from a JSON config file">
+                            📂 Load Config
                         </button>
                     </div>
                     <div id="tool-search" class="tool-search">
@@ -488,6 +494,71 @@
             </div>
         </div>
     </dialog>
+
+    <!-- Save Tools Multi-Select Dialog -->
+    <dialog id="save-tools-dialog" class="dialog-overlay">
+        <div class="dialog" style="min-width: 420px;">
+            <div class="dialog-header">
+                <h3>Save Tools to File</h3>
+                <button class="btn-icon" id="close-save-tools-dialog">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <div class="save-streams-toolbar">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="save-tools-select-all" checked> Select All
+                    </label>
+                    <span id="save-tools-count" class="save-streams-hint">0 selected</span>
+                </div>
+                <div id="save-tools-list" class="save-streams-list">
+                    <!-- Dynamically populated -->
+                </div>
+                <div class="save-streams-dir">
+                    <label>Save to:</label>
+                    <input type="text" id="save-tools-dir-input" placeholder="Select output directory..." readonly>
+                    <button class="btn btn-sm btn-secondary" id="btn-browse-save-tools-dir">Browse...</button>
+                </div>
+                <div class="save-streams-overwrite">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="save-tools-overwrite"> Overwrite existing files
+                    </label>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="btn-cancel-save-tools">Cancel</button>
+                <button class="btn btn-primary" id="btn-confirm-save-tools" disabled>💾 Save Selected</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Load Tools Confirm Dialog -->
+    <div id="load-tools-confirm-dialog" class="modal-overlay" style="display:none">
+        <div class="modal-dialog">
+            <h3>📂 Import Tools</h3>
+            <div class="modal-body">
+                <p id="load-tools-confirm-summary">Loading...</p>
+                <div class="modal-options">
+                    <label class="modal-option selected" data-action="skip">
+                        <input type="radio" name="load-tools-conflict" value="skip" checked>
+                        <div class="option-content">
+                            <strong>Skip conflicts (Recommended)</strong>
+                            <small>Keep existing tools with the same name</small>
+                        </div>
+                    </label>
+                    <label class="modal-option" data-action="overwrite">
+                        <input type="radio" name="load-tools-conflict" value="overwrite">
+                        <div class="option-content">
+                            <strong>Overwrite conflicts</strong>
+                            <small>Replace existing tools with the same name</small>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-load-tools-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="btn-load-tools-confirm" class="btn btn-primary">Import</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Restart confirmation dialog -->
     <div id="restart-dialog" class="modal-overlay" style="display:none">

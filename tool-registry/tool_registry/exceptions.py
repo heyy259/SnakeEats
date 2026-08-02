@@ -48,3 +48,10 @@ class ScannerStateError(ToolRegistryError):
         self.current_state = current_state
         self.expected_state = expected_state
         super().__init__(f"Scanner is in '{current_state}' state, expected '{expected_state}'")
+
+
+class ToolConflictError(ToolRegistryError):
+    """工具名冲突（加载配置时遇到已存在的工具）"""
+    def __init__(self, name: str):
+        self.name = name
+        super().__init__(f"Tool '{name}' already exists in registry (conflict)")
