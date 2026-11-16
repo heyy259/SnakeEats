@@ -1,0 +1,22 @@
+{
+  "$schema": "snake-manifest-v1",
+  "id": "ex-legacy-flat",
+  "saved_at": "2026-01-01T00:00:00Z",
+  "version": 3,
+  "streams": [
+    {
+      "name": "legacy_a",
+      "description": "旧 SDK 扁平方言样例 A",
+      "tags": {},
+      "file": null,
+      "encoding": "utf-8"
+    },
+    {
+      "name": "legacy_b",
+      "description": "旧 SDK 扁平方言样例 B",
+      "tags": {},
+      "file": "data/seed.txt",
+      "encoding": "utf-8"
+    }
+  ]
+}

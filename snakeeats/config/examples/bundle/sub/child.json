@@ -1,0 +1,14 @@
+{
+  "$schema": "snake-manifest-v1",
+  "id": "ex-bundle-child",
+  "streams": [
+    {
+      "name": "bundle_child_seed",
+      "description": "include 子配置流（D4 无自动前缀：作者手写扁平全名 bundle_child_seed）",
+      "source": { "file_path": "child_data.txt", "encoding": "utf-8" }
+    }
+  ],
+  "scans": [
+    { "stream": "bundle_child_seed", "mode": "start" }
+  ]
+}

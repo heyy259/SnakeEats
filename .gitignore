@@ -1,0 +1,34 @@
+# opencode 会话延续状态文件（运行噪音，无需入库）
+.sisyphus/run-continuation/
+
+# E2E 实测生成物（内含运行机绝对路径/临时目录/session id，跨机不可移植）
+opencode_tools/tests/_generated/
+
+# Python 缓存与构建产物
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+snakeeats/tmp/
+
+# 仓库根临时存储根（G3：默认存储根已绝对化，根级 tmp/ 不应入库）
+/tmp/
+
+# snake init 落盘的 root 凭据文件（绝不入库、绝不打包）
+.snakeeats.token
+
+# 表格/文档本地备份（非源码）
+功能清单/*.bak
+功能清单/*.bak.xlsx
+# 本地 agent 运行态与个人变体（不入库）
+.omo/
+opencode_tools/manifest - heyy.json
+
+dist-test/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

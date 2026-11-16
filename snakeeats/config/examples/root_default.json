@@ -1,0 +1,26 @@
+{
+  "$schema": "snake-manifest-v1",
+  "id": "ex-root-default",
+  "system": {
+    "auth_token_env": "SNAKEEATS_AUTH_TOKEN"
+  },
+  "streams": [
+    {
+      "name": "inbox",
+      "title": "现货套利复盘",
+      "description": "根 manifest 流：作者手写扁平全名（无自动前缀）",
+      "tags": { "role": "input" },
+      "source": { "file_path": "data/seed.txt", "encoding": "utf-8" }
+    }
+  ],
+  "tools": {
+    "echo": {
+      "description": "回显示例工具",
+      "tool_path": "tools/echo.py",
+      "permission": "normal"
+    }
+  },
+  "scans": [
+    { "stream": "inbox", "mode": "start", "classification": { "state": "open" }, "position": null }
+  ]
+}

@@ -1,0 +1,107 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "snakeeats"
+dynamic = ["version"]
+description = "SnakeEats unified service: single-process single-port WS JSON-RPC (text streams x tool registry)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "heyy259", email = "67221771+heyy259@users.noreply.github.com" },
+]
+keywords = [
+    "websockets",
+    "json-rpc",
+    "text-stream",
+    "tool-registry",
+    "server",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+dependencies = [
+    "websockets>=14,<16",
+    "jsonschema>=4.0",
+    "chardet>=5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/heyy259/snakeeats"
+Repository = "https://github.com/heyy259/snakeeats"
+Issues = "https://github.com/heyy259/snakeeats/issues"
+Changelog = "https://github.com/heyy259/snakeeats/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+snake = "snakeeats.cli:main"
+snakeeats = "snakeeats.cli:main"
+
+[tool.hatch.version]
+path = "snakeeats/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["snakeeats"]
+exclude = [
+    "snakeeats/tests",
+    # 策略：examples 不进 wheel（安装位没有仓库上下文）；示例只随 sdist / 源码仓发布。
+    "snakeeats/examples",
+    "snakeeats/docs",
+    "**/__pycache__",
+    "*.pyc",
+    "**/.snakeeats.token",
+]
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "snakeeats",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+    "CHANGELOG.md",
+]
+exclude = [
+    "snakeeats/tests",
+    # 策略：examples 有意不排除 —— 可运行示例随 sdist（源码 tarball）发布，仅 wheel 排除。
+    "snakeeats/docs",
+    "**/__pycache__",
+    "*.pyc",
+    "**/.snakeeats.token",
+]
+
+[tool.coverage.run]
+source = ["snakeeats"]
+omit = [
+    "snakeeats/tests/*",
+    "*/tests/*",
+    "**/__pycache__/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]

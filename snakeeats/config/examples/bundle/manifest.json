@@ -1,0 +1,28 @@
+{
+  "$schema": "snake-manifest-v1",
+  "id": "ex-bundle-root",
+  "namespace": "bundle",
+  "streams": [
+    {
+      "name": "bundle_seed_stream",
+      "description": "bundle 首装示例流（作者手写扁平全名 bundle_；namespace 仅报告标签）",
+      "source": { "file_path": "data/seed.txt", "encoding": "utf-8" }
+    },
+    {
+      "name": "bundle_flow_stream",
+      "description": "bundle 内第二个流（无源文件：source 可省略）"
+    }
+  ],
+  "tools": {
+    "bundle_echo": {
+      "description": "bundle 示例工具（作者手写扁平全名 bundle_echo）",
+      "tool_path": "tools/echo.py"
+    }
+  },
+  "scans": [
+    { "stream": "bundle_seed_stream", "mode": "start" }
+  ],
+  "includes": [
+    { "path": "sub/child.json" }
+  ]
+}

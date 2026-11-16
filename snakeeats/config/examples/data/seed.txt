@@ -1,0 +1,4 @@
+示例数据文件（root_default / namespaced / legacy 等样例共用相对引用）。
+
+第一行
+第二行

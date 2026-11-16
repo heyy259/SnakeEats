@@ -1,0 +1,69 @@
+# SnakeEats systemd unit (W2-6, plan D7).
+#
+# Install path convention:
+#   /etc/systemd/system/snakeeats.service   (copy or symlink this file)
+#   /etc/snakeeats/snakeeats.env            (admin token, mode 0600)
+#
+# Create the service account first, e.g.:
+#   useradd --system --home /var/lib/snakeeats --shell /usr/sbin/nologin snakeeats
+#
+# See deploy/README.md for the full operator runbook.
+
+[Unit]
+Description=SnakeEats unified WS JSON-RPC service (single-process, single-port)
+Documentation=file:///opt/snakeeats/deploy/README.md
+After=network.target
+Wants=network.target
+
+[Service]
+# Type=exec, NOT notify: the app is not sd_notify-aware and must not be treated
+# as one. systemd considers the service started once ExecStart() succeeds.
+Type=exec
+User=snakeeats
+Group=snakeeats
+
+# PYTHONUNBUFFERED=1 so SIGKILL never loses buffered logs.
+# SNAKEEATS_STORAGE points at the StateDirectory below, so the registry/pidfile
+# and all storage subareas stay writable even under a read-only host root.
+Environment=PYTHONUNBUFFERED=1
+Environment=SNAKEEATS_STORAGE=/var/lib/snakeeats
+Environment=SNAKEEATS_PORT=9876
+Environment=SNAKEEATS_SYSTEM_ID=main
+Environment=SNAKEEATS_LOG_LEVEL=INFO
+
+# Admin root token comes from this file. NEVER hardcode it in this unit.
+# File contents (owned root:snakeeats, mode 0600):
+#   SNAKEEATS_ADMIN_TOKEN=<strong-random-token>
+# The leading '-' makes the file optional at start; without a token the app
+# fails closed and refuses to serve (there is no no-auth serve mode).
+EnvironmentFile=-/etc/snakeeats/snakeeats.env
+
+# Writable state locations under a read-only root.
+# StateDirectory= creates /var/lib/snakeeats (== SNAKEEATS_STORAGE) owned by User.
+# RuntimeDirectory= creates /run/snakeeats for transient runtime files.
+StateDirectory=snakeeats
+StateDirectoryMode=0750
+RuntimeDirectory=snakeeats
+RuntimeDirectoryMode=0750
+
+# Console script installed by `pip install .` from the repo root. If you installed
+# into a venv, replace this with e.g. /opt/snakeeats/venv/bin/snake, or use:
+#   ExecStart=/usr/bin/python3 -m snakeeats serve --storage /var/lib/snakeeats
+# --storage mirrors SNAKEEATS_STORAGE=/var/lib/snakeeats (the StateDirectory path).
+ExecStart=/usr/bin/snake serve --storage /var/lib/snakeeats
+
+# NO ExecStop= on purpose. If ExecStop returns, systemd immediately sends
+# KillSignal again, producing a double shutdown (systemd.service(5) warns that
+# ExecStop must synchronously wait for the service). Let SIGTERM from
+# KillSignal reach the main process directly and let the app drain once.
+KillSignal=SIGTERM
+
+# MUST be strictly greater than SNAKEEATS_SHUTDOWN_TIMEOUT (default 10s). The
+# app forces os._exit(1) past its own deadline; systemd must not SIGKILL first.
+TimeoutStopSec=20
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

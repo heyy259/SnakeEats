@@ -1,0 +1,115 @@
+# Release: build sdist + wheel and publish to PyPI / TestPyPI via Trusted Publishing (OIDC).
+#
+# - Push a `v*.*.*` tag      -> build, verify tag == snakeeats.__version__, publish to PyPI.
+# - Run workflow_dispatch    -> build, publish to the chosen `target` (TestPyPI dry run by
+#                               default). No tag comparison is made on dispatch.
+#
+# Auth is OIDC-only: no API tokens, no repository secrets. PyPI/TestPyPI must have this
+# workflow registered as a Trusted Publisher for the `pypi` / `testpypi` environments.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Publish target for this dry run"
+        required: true
+        type: choice
+        options:
+          - testpypi
+          - pypi
+        default: testpypi
+
+jobs:
+  build:
+    name: Build sdist + wheel
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build
+        run: python -m pip install build
+
+      - name: Build sdist + wheel
+        run: python -m build
+
+      # Tag must equal snakeeats/__init__.py's __version__. On workflow_dispatch there is
+      # no release tag, so the comparison is skipped and the version is only printed.
+      - name: Version guard (tag == __version__)
+        shell: python
+        run: |
+          import os
+          import pathlib
+          import re
+          import sys
+
+          source = pathlib.Path("snakeeats/__init__.py").read_text(encoding="utf-8")
+          match = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', source, re.MULTILINE)
+          if match is None:
+              sys.exit("FATAL: __version__ not found in snakeeats/__init__.py")
+          package_version = match.group(1)
+          print(f"snakeeats __version__: {package_version}")
+
+          if os.environ.get("GITHUB_REF_TYPE") != "tag":
+              print(
+                  f"Dry run ({os.environ.get('GITHUB_EVENT_NAME')}): no release tag to compare; "
+                  "skipping tag equality check."
+              )
+              sys.exit(0)
+
+          tag_version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          print(f"release tag version: {tag_version}")
+          if tag_version != package_version:
+              print(
+                  f"::error::Tag 'v{tag_version}' does not match snakeeats/__init__.py "
+                  f"__version__ '{package_version}'. Bump __version__ (or retag) before publishing."
+              )
+              sys.exit(1)
+          print(f"Version guard passed: v{tag_version} == __version__ {package_version}")
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    # A `v*.*.*` tag push publishes to PyPI; workflow_dispatch uses the `target` input.
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'pypi' }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PUBLISH_TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'pypi' }}
+    steps:
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      # OIDC trusted publishing only: no password / API token is ever passed.
+      - name: Publish to ${{ env.PUBLISH_TARGET }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: ${{ env.PUBLISH_TARGET == 'testpypi' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}

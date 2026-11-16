@@ -1,0 +1,70 @@
+# SnakeEats docker-compose service (W2-6, plan D7).
+#
+# The build context is the repo root (one level up), so run compose from anywhere with:
+#
+#   SNAKEEATS_ADMIN_TOKEN=<token> docker compose -f deploy/docker-compose.yml up -d --build
+#
+# The image ENTRYPOINT is exec-form `python -m snakeeats`; the command below adds
+# `--host 0.0.0.0` so the service is actually reachable inside the container
+# (the app defaults to 127.0.0.1). Nothing is published to the host unless you
+# uncomment `ports:`.
+
+services:
+  snakeeats:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: snakeeats:local
+
+    # Reap zombies and forward SIGTERM to the app (PID 1 signal handling).
+    init: true
+
+    # Immutable root filesystem; only the data volume and /tmp are writable.
+    read_only: true
+    tmpfs:
+      - /tmp
+
+    # MUST be >= SNAKEEATS_SHUTDOWN_TIMEOUT. The app drains in 8s, leaving ~7s of
+    # headroom before Docker's SIGKILL at the 15s grace deadline. Docker's default
+    # grace (10s) equals the app default deadline (10s): a known boundary hazard.
+    stop_grace_period: 15s
+
+    environment:
+      # Root credential, injected from the host environment, never stored in this file.
+      SNAKEEATS_ADMIN_TOKEN: ${SNAKEEATS_ADMIN_TOKEN:?set SNAKEEATS_ADMIN_TOKEN before starting}
+      SNAKEEATS_STORAGE: /data
+      SNAKEEATS_PORT: "9876"
+      SNAKEEATS_SYSTEM_ID: main
+      SNAKEEATS_LOG_LEVEL: INFO
+      # App-side deadline (8s) is strictly below stop_grace_period (15s) above.
+      SNAKEEATS_SHUTDOWN_TIMEOUT: "8"
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+
+    command: ["serve", "--host", "0.0.0.0", "--port", "9876", "--storage", "/data"]
+
+    volumes:
+      - snakeeats-data:/data
+
+    # Liveness only: a bare TCP connect to the listening port. It deliberately does
+    # NOT call system.info/ready, because during graceful drain ready=false and a
+    # readiness-style check would make an orchestrator kill the container mid-drain.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os,socket;socket.create_connection(('127.0.0.1',int(os.environ.get('SNAKEEATS_PORT','9876'))),2).close()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+    # Not published by default. To expose it, bind to a private interface, e.g.:
+    # ports:
+    #   - "127.0.0.1:9876:9876"
+
+volumes:
+  snakeeats-data:

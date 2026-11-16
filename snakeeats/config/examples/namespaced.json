@@ -1,0 +1,16 @@
+{
+  "$schema": "snake-manifest-v1",
+  "id": "ex-namespaced",
+  "namespace": "team",
+  "streams": [
+    {
+      "name": "team_notes",
+      "description": "作者手写扁平全名（D4：namespace 仅作报告标签、不再自动加前缀）",
+      "tags": { "role": "workbench" },
+      "source": { "file_path": "data/seed.txt", "encoding": "utf-8" }
+    }
+  ],
+  "scans": [
+    { "stream": "team_notes", "mode": "start" }
+  ]
+}
