@@ -9,6 +9,8 @@ from __future__ import annotations
 import ntpath
 import os
 
+import pytest
+
 from snakeeats.config import api
 from snakeeats.config.paths import to_portable_path
 
@@ -138,6 +140,7 @@ def test_to_portable_path_same_drive_relative(tmp_path):
     assert os.path.normpath(os.path.join(str(base), rel)) == os.path.normpath(str(target))
 
 
+@pytest.mark.skipif(os.name != "nt", reason="需要 Windows 盘符语义")
 def test_to_portable_path_cross_drive_absolute_with_warning(tmp_path):
     """跨盘保留绝对 + 返回 warning 文本（回写相对会跨盘失败）。"""
     drive = os.path.splitdrive(str(tmp_path))[0]  # 如 C:
