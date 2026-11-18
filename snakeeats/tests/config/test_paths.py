@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import ntpath
 import os
 
 from snakeeats.config import api
@@ -142,6 +143,6 @@ def test_to_portable_path_cross_drive_absolute_with_warning(tmp_path):
     drive = os.path.splitdrive(str(tmp_path))[0]  # 如 C:
     other = ("D:" if drive.upper() != "D:" else "E:") + r"\cfg\manifest.json"
     back, warning = to_portable_path(other, str(tmp_path))
-    assert os.path.isabs(back)
-    assert back == os.path.normpath(other)
+    assert ntpath.isabs(back)
+    assert back == ntpath.normpath(other)
     assert warning is not None and "跨盘" in warning

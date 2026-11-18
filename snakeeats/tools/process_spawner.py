@@ -792,23 +792,26 @@ class ProcessSpawner:
 
         if session_leader:
             # POSIX：整组 SIGTERM → 超时 SIGKILL（仅组首可 killpg）。
-            try:
-                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-            except (ProcessLookupError, PermissionError, OSError) as e:
-                logger.debug(f"killpg SIGTERM failed for pid {process.pid}: {e}")
-            try:
-                process.wait(timeout=graceful_timeout)
-            except subprocess.TimeoutExpired:
+            process_pid = getattr(process, "pid", None)
+            if process_pid is not None:
                 try:
-                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                    os.killpg(os.getpgid(process_pid), signal.SIGTERM)
                 except (ProcessLookupError, PermissionError, OSError) as e:
-                    logger.debug(f"killpg SIGKILL failed for pid {process.pid}: {e}")
+                    logger.debug(f"killpg SIGTERM failed for pid {process_pid}: {e}")
                 try:
-                    process.wait(timeout=5)
+                    process.wait(timeout=graceful_timeout)
                 except subprocess.TimeoutExpired:
-                    pass
-            process.poll()
-            return process.returncode
+                    try:
+                        os.killpg(os.getpgid(process_pid), signal.SIGKILL)
+                    except (ProcessLookupError, PermissionError, OSError) as e:
+                        logger.debug(f"killpg SIGKILL failed for pid {process_pid}: {e}")
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        pass
+                process.poll()
+                if process.returncode is not None:
+                    return process.returncode
 
         if graceful_timeout > 0:
             process.terminate()

@@ -1,6 +1,7 @@
 """工具函数测试"""
 
 import hashlib
+import os
 
 import pytest
 
@@ -24,6 +25,7 @@ class TestValidateAbsolutePath:
         # 不应该抛异常
         validate_absolute_path("/path/to/file.txt")
 
+    @pytest.mark.skipif(os.name != "nt", reason="需要 Windows 路径语义")
     def test_windows_absolute_path(self):
         """测试 Windows 绝对路径"""
         validate_absolute_path("C:\\Users\\test\\file.txt")
