@@ -43,6 +43,7 @@ from .primitives import (
     CAT_ATTACH_MISSING,
     CAT_CONFLICT,
     CAT_FAILURE,
+    ExecutorFn,
     PREVIEW_ATTACH_MISSING,
     PREVIEW_CONFLICTS,
     PREVIEW_FAILURES,

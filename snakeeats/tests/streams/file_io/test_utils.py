@@ -64,8 +64,9 @@ class TestGenerateFilename:
 
     def test_sanitized_stem(self):
         """测试非法字符替换/连续下划线合并/首尾下划线剔除"""
-        result = generate_filename('a\\b/c:d*e?f"g<h>i|j')
-        assert result == f"a_b_c_d_e_f_g_h_i_j-{_digest('a\\b/c:d*e?f\"g<h>i|j')}.txt"
+        source = 'a\\b/c:d*e?f"g<h>i|j'
+        result = generate_filename(source)
+        assert result == f"a_b_c_d_e_f_g_h_i_j-{_digest(source)}.txt"
 
     def test_empty_name(self):
         """测试空名称"""

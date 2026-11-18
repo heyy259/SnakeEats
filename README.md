@@ -97,13 +97,13 @@ export SNAKEEATS_ADMIN_TOKEN=<root-token>  # Linux / macOS
 
 | 文档 | 内容 |
 | --- | --- |
-| [`snakeeats/README.md`](snakeeats/README.md) | 运维 / CLI 参考：停机契约、env 表、恢复与重启行为 |
-| [`snakeeats/docs/TOOL_GUIDE.md`](snakeeats/docs/TOOL_GUIDE.md) | 工具指南正典：调用路径、超时、深度/并发护栏 |
-| [`snakeeats/ERROR_CODES.md`](snakeeats/ERROR_CODES.md) | 错误码与 kind 词表 |
-| [`snakeeats/MIGRATION.md`](snakeeats/MIGRATION.md) | 从旧双服务迁移：env / 方法名对照 |
-| [`snakeeats/docs/BACKUP_RESTORE.md`](snakeeats/docs/BACKUP_RESTORE.md) | 备份与恢复 runbook |
-| [`snakeeats/docs/UPGRADE_ROLLBACK.md`](snakeeats/docs/UPGRADE_ROLLBACK.md) | 升级与回滚 runbook |
-| [`snakeeats/examples/`](snakeeats/examples/) | 可运行的 SDK 示例 |
+| [`snakeeats/README.md`](https://github.com/heyy259/snakeeats/blob/master/snakeeats/README.md) | 运维 / CLI 参考：停机契约、env 表、恢复与重启行为 |
+| [`snakeeats/docs/TOOL_GUIDE.md`](https://github.com/heyy259/snakeeats/blob/master/snakeeats/docs/TOOL_GUIDE.md) | 工具指南正典：调用路径、超时、深度/并发护栏 |
+| [`snakeeats/ERROR_CODES.md`](https://github.com/heyy259/snakeeats/blob/master/snakeeats/ERROR_CODES.md) | 错误码与 kind 词表 |
+| [`snakeeats/MIGRATION.md`](https://github.com/heyy259/snakeeats/blob/master/snakeeats/MIGRATION.md) | 从旧双服务迁移：env / 方法名对照 |
+| [`snakeeats/docs/BACKUP_RESTORE.md`](https://github.com/heyy259/snakeeats/blob/master/snakeeats/docs/BACKUP_RESTORE.md) | 备份与恢复 runbook |
+| [`snakeeats/docs/UPGRADE_ROLLBACK.md`](https://github.com/heyy259/snakeeats/blob/master/snakeeats/docs/UPGRADE_ROLLBACK.md) | 升级与回滚 runbook |
+| [`snakeeats/examples/`](https://github.com/heyy259/snakeeats/tree/master/snakeeats/examples/) | 可运行的 SDK 示例 |
 
 ## 许可证
 

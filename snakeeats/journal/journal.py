@@ -32,7 +32,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Iterator, NoReturn
+from typing import Any, Iterator, NoReturn
 
 # C1：统一持久化目录（journal 落盘区）。禁止 import snakeeats.streams.*
 # （流域 domain 在顶层 import 本包；任何反向依赖都会造成循环 import）。

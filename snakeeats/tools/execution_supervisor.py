@@ -21,7 +21,6 @@ from __future__ import annotations
 import json
 import logging
 import queue
-import signal
 import subprocess
 import threading
 import time
@@ -33,8 +32,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
-    from snakeeats.security.api import Principal
-
     from .executor import ExecCall
     from .tool_definition import ToolDefinition
 

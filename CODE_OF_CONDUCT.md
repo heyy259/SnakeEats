@@ -2,8 +2,9 @@
 
 > 中文摘要：本项目采用 Contributor Covenant v2.1 行为准则。参与者应营造开放、友好、
 > 包容、健康的社区环境，尊重不同观点与经历，接受并给出建设性反馈。骚扰、侮辱、
-> 人身攻击、公开他人隐私等行为不可接受。违规可上报至 `<TODO: conduct contact>`
-> （占位符，维护者需在公开发布前替换为真实渠道）。以下为标准英文原文。
+> 人身攻击、公开他人隐私等行为不可接受。违规请通过维护者
+> [@heyy259](https://github.com/heyy259) 的 GitHub 主页所列私下联系方式报告；
+> 请勿在公开 Issue 中披露敏感信息。以下为标准英文原文。
 
 ## Our Pledge
 
@@ -65,7 +66,9 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-`<TODO: conduct contact>`.
+the private contact channel listed on the maintainer's
+[GitHub profile](https://github.com/heyy259). Do not disclose sensitive details
+in a public issue.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

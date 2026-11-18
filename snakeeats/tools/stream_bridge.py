@@ -287,7 +287,7 @@ class SyncStreamClient:
         if tags is not None:
             params["tags"] = tags
         try:
-            meta = self._call("stream.create", **params)
+            self._call("stream.create", **params)
         except Exception as exc:
             if _is_error_code(exc, STREAM_ALREADY_EXISTS):
                 raise ValueError(f"Stream '{name}' already exists") from exc

@@ -8,27 +8,23 @@ import re
 import threading
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Literal, Optional
 
 if TYPE_CHECKING:
     from snakeeats.security.api import Principal
 
-from .executor import ExecCall, ToolExecutor
+from .executor import ToolExecutor
 from .exceptions import ScannerNotRunningError, ScannerStateError
 from .scan_diagnostics import (
-    DIAGNOSTIC_KINDS,
-    DIAG_SENTINEL,
+    DIAGNOSTIC_KINDS as DIAGNOSTIC_KINDS,
+    DIAG_SENTINEL as DIAG_SENTINEL,
 )
 from .scan_marker_ops import ScanMarkerOps
 from .scan_session import CursorTracker, ScanSession
 from ..errors import STALE_ANCHOR as _STALE_ANCHOR_CODE
 from ..errors import VERSION_MISMATCH as _VERSION_MISMATCH_CODE
-from ..streams.exceptions import (
-    InvalidPositionError,
-    StaleAnchorError,
-)
+from ..streams.exceptions import StaleAnchorError
 logger = logging.getLogger(__name__)
 
 SYS_FIELDS = {"$mode", "$console_stream", "$keep_stdin", "$timeout", "$process_name", "$keep_sys_fields"}

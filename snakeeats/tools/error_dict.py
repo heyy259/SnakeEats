@@ -18,7 +18,6 @@ __all__ = [
     "make_result_error",
     "success_false",
     "exception_to_result_error",
-    "KIND_BY_EXCEPTION",
 ]
 
 

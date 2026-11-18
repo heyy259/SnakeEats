@@ -28,11 +28,7 @@ undo 补偿化（§4.2.2 融合-v2 五细则）：
 import re
 from typing import Any
 
-from snakeeats.kernel.diff import (
-    DiffRecord,
-    apply_record_to_text,
-    fold_to_version,
-)
+from snakeeats.kernel.diff import DiffRecord
 from ..exceptions import (
     InvalidPositionError,
     UndoLimitExceededError,

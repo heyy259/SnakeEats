@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复 `config.pipeline` 的 `ExecutorFn` 仅注解引用缺失；补正错误助手
+  `__all__` 中不存在的历史符号，并清理生产模块中的无用导入/赋值。
+- 修复 Python 3.10 不兼容的测试 f-string 写法，保持声明的最低版本与 CI 覆盖一致。
+
+### Changed
+
+- 完善开源发布文档：PyPI README 文档链接改为 GitHub 绝对地址，补齐公开的行为准则
+  联系方式与 GitHub Security Advisory 漏洞上报入口。
+
 ### Added
 
 - **SDK 增量顺序写入（`SequentialWriter`，2026-10-29）**：`StreamHandle.sequential()`
