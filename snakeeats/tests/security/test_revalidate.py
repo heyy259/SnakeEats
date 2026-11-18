@@ -8,10 +8,9 @@ depth）。root 凭据仍走 loopback 边界（调用方可传 op_context 保留
 
 from __future__ import annotations
 
-import time
-
 from .conftest import ROOT_TOKEN
 
+from snakeeats.security import credentials
 from snakeeats.security.capability_table import token_hash
 from snakeeats.security.credentials import Principal
 
@@ -47,11 +46,13 @@ def test_revalidate_after_revoke_is_none(bundle, root):
 # ── 过期 → None ──────────────────────────────────────────────────────
 
 
-def test_revalidate_expired_is_none(bundle, root):
-    token, _ = bundle.verifier.mint("normal", 0.05, "agent-rv3", caller=root)
+def test_revalidate_expired_is_none(bundle, root, monkeypatch):
+    now = [1000.0]
+    monkeypatch.setattr(credentials, "_now", lambda: now[0])
+    token, _ = bundle.verifier.mint("normal", 10, "agent-rv3", caller=root)
     principal = bundle.verifier.verify(token)
     assert principal is not None
-    time.sleep(0.1)
+    now[0] += 11
     assert bundle.verifier.verify(token) is None
     assert bundle.verifier.revalidate(principal) is None
 

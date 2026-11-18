@@ -5,7 +5,16 @@ from __future__ import annotations
 import os
 import sys
 
+import pytest
+
 from snakeeats import persistence
+
+
+@pytest.fixture
+def fake_home(monkeypatch, tmp_path):
+    home = tmp_path / "home"
+    monkeypatch.setattr(persistence, "_home_dir", lambda: home)
+    return home
 
 
 def test_default_storage_root_is_absolute_platform_appropriate():
@@ -14,15 +23,19 @@ def test_default_storage_root_is_absolute_platform_appropriate():
     assert root.name == "snakeeats"
 
 
-def test_default_storage_root_honours_platform_env_without_io(monkeypatch, tmp_path):
+def test_default_storage_root_honours_platform_env_without_io(
+    monkeypatch, tmp_path, fake_home
+):
     """平台 resolver：Windows 读 LOCALAPPDATA / POSIX 读 XDG_DATA_HOME；只解析不建目录。"""
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "localappdata"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdgdata"))
     root = persistence.default_storage_root()
     assert root.is_absolute()
-    if os.name == "nt" and sys.platform != "darwin":
+    if sys.platform == "darwin":
+        assert root == fake_home / "Library" / "Application Support" / "snakeeats"
+    elif os.name == "nt":
         assert root == tmp_path / "localappdata" / "snakeeats"
-    elif sys.platform != "darwin":
+    else:
         assert root == tmp_path / "xdgdata" / "snakeeats"
     assert not root.exists()
 
@@ -46,15 +59,17 @@ def test_explicit_root_beats_env(monkeypatch, tmp_path):
     assert not (tmp_path / "env-store").exists()
 
 
-def test_blank_env_falls_back_to_platform_default(monkeypatch, tmp_path):
+def test_blank_env_falls_back_to_platform_default(monkeypatch, tmp_path, fake_home):
     monkeypatch.setenv("SNAKEEATS_STORAGE", "   ")
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "localappdata"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdgdata"))
     layout = persistence.ensure_persistence_dirs(None)
     assert layout.root.is_absolute()
-    if os.name == "nt" and sys.platform != "darwin":
+    if sys.platform == "darwin":
+        assert layout.root == fake_home / "Library" / "Application Support" / "snakeeats"
+    elif os.name == "nt":
         assert layout.root == tmp_path / "localappdata" / "snakeeats"
-    elif sys.platform != "darwin":
+    else:
         assert layout.root == tmp_path / "xdgdata" / "snakeeats"
     assert layout.registry_file.parent.is_dir()
 
@@ -72,7 +87,7 @@ def test_resolve_port_with_env_storage_does_not_touch_cwd(monkeypatch, tmp_path)
     assert (store / "registry").is_dir()
 
 
-def test_no_module_level_mkdir_on_import(monkeypatch, tmp_path):
+def test_no_module_level_mkdir_on_import(monkeypatch, tmp_path, fake_home):
     """导入/解析期零 IO：仅 default_storage_root() 不创建目录（验收不变量）。"""
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "la"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg"))
