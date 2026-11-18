@@ -41,7 +41,7 @@ dependencies = [
 Homepage = "https://github.com/heyy259/snakeeats"
 Repository = "https://github.com/heyy259/snakeeats"
 Issues = "https://github.com/heyy259/snakeeats/issues"
-Changelog = "https://github.com/heyy259/snakeeats/blob/master/CHANGELOG.md"
+Changelog = "https://github.com/heyy259/snakeeats/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
