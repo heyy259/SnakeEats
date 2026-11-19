@@ -559,4 +559,4 @@ snake status
 ### 11.4 新增未决项（本次复核发现）
 
 - **仓库名与包名不一致**：git remote 为 `heyy259/self_control`，发布源仓建议改/新建为 `snakeeats`，`[project.urls]` 亦需相应填写。
-- **作者/版权行仍为占位**：`pyproject.toml` 现为 `{ name = "heyy259", email = "67221771+heyy259@users.noreply.github.com" }`，LICENSE 版权行需定稿（对应 §10 未决项）。
+- **作者/版权已统一**：`pyproject.toml` 使用 `{ name = "heyy259", email = "67221771+heyy259@users.noreply.github.com" }`，LICENSE 版权行为 `heyy259`（对应 §10 已完成项）。

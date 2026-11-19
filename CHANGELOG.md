@@ -17,6 +17,7 @@
 
 - 完善开源发布文档：PyPI README 文档链接改为 GitHub 绝对地址，补齐公开的行为准则
   联系方式与 GitHub Security Advisory 漏洞上报入口。
+- 统一公开作者与版权身份，并将提交邮箱迁移到 GitHub noreply 地址。
 
 ### Added
 
